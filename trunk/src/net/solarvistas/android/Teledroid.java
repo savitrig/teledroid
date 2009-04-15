@@ -1,4 +1,4 @@
-package net.solrvistas.android;
+package net.solarvistas.android;
 
 import android.app.Activity;
 import android.os.Bundle;
