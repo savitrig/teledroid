@@ -65,7 +65,8 @@ public class Connection {
                     result += new String(tmp, 0, i);
                 }
                 if (channel.isClosed()) {
-                    result += "exit-status: " + channel.getExitStatus();
+                    if(channel.getExitStatus() != 0)
+                    	return "exit-status: " + channel.getExitStatus();
                     break;
                 }
                 try {

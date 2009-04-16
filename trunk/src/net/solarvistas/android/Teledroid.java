@@ -23,20 +23,22 @@ public class Teledroid extends Activity {
         textView = (TextView) findViewById(R.id.view_result);
         cmdInput = (EditText) findViewById(R.id.command);
 
-        shell = new Connection("cloud", "teledroid", "to.zxi.cc", 22);
-        /*while (txt.length() < 1000) {
-            txt += "\tChar: up to " + txt.length() + "\n";
-        } */
+        //initConnection();
         ImageButton btnTest = (ImageButton) findViewById(R.id.btn_test);
         btnTest.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                textView.setText(shell.Exec(cmdInput.getText().toString()));
+            	if(shell == null)
+            		initConnection();
+            	textView.append("$"+cmdInput.getText().toString()+"\n");
+                textView.append(shell.Exec(cmdInput.getText().toString()));
                 cmdInput.setText("");
             }
         });
     }
 
-
+    public void initConnection(){
+    	shell = new Connection("cloud", "teledroid", "to.zxi.cc", 22);
+    }
 
 
 }
