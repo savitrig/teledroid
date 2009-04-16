@@ -23,7 +23,7 @@ public class Teledroid extends Activity {
         textView = (TextView) findViewById(R.id.view_result);
         cmdInput = (EditText) findViewById(R.id.command);
 
-        shell = new Connection("cloud", "teledroid", "stargate.cs.usfca.edu", 22);
+        shell = new Connection("cloud", "teledroid", "to.zxi.cc", 22);
         /*while (txt.length() < 1000) {
             txt += "\tChar: up to " + txt.length() + "\n";
         } */

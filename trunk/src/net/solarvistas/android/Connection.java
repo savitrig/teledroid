@@ -15,18 +15,13 @@ public class Connection {
     String user, pass, host;
     int port;
     Session session;
-
+    String status = "ok";
+    
     public Connection(String user, String pass, String host, int port) {
         this.user = user;
         this.pass = pass;
         this.host = host;
         this.port = port;
-    }
-
-    public String Exec(String command) {
-        Channel channel;
-        String result = "";
-
         try {
             JSch jsch = new JSch();
             session = jsch.getSession(user, host, port);
@@ -38,6 +33,24 @@ public class Connection {
 
             session.connect();   // making a connection with timeout.
 
+        } catch(Exception e){
+        	status = e.toString();
+        }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+    	super.finalize();
+    	session.disconnect();
+    }
+    
+    public String Exec(String command) {
+    	if(!status.equals("ok"))
+    		return status;
+    	Channel channel;
+        String result = "";
+        
+        try{
             channel = session.openChannel("exec");
             ((ChannelExec) channel).setCommand(command);
             channel.setInputStream(null);
@@ -62,7 +75,6 @@ public class Connection {
                 }
             }
             channel.disconnect();
-            session.disconnect();
         } catch (Exception e) {
             result += e;
         }
