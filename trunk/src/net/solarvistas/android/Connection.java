@@ -16,7 +16,7 @@ public class Connection {
     int port;
     Session session;
     String status = "ok";
-    
+
     public Connection(String user, String pass, String host, int port) {
         this.user = user;
         this.pass = pass;
@@ -43,13 +43,13 @@ public class Connection {
     	super.finalize();
     	session.disconnect();
     }
-    
+
     public String Exec(String command) {
     	if(!status.equals("ok"))
     		return status;
     	Channel channel;
         String result = "";
-        
+
         try{
             channel = session.openChannel("exec");
             ((ChannelExec) channel).setCommand(command);
