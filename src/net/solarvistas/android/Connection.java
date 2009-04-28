@@ -7,16 +7,23 @@
  */
 package net.solarvistas.android;
 
-import com.jcraft.jsch.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 
-import java.io.InputStream;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
 
 public class Connection {
     String user, pass, host;
     int port;
     Session session;
     String status = "ok";
-
+	Channel channel;
+    BufferedReader fromServer;
+    OutputStream toServer; 
+    
     public Connection(String user, String pass, String host, int port) {
         this.user = user;
         this.pass = pass;
@@ -41,44 +48,29 @@ public class Connection {
     @Override
     protected void finalize() throws Throwable {
     	super.finalize();
-    	session.disconnect();
+    	//session.disconnect();
     }
 
-    public String Exec(String command) {
-    	if(!status.equals("ok"))
-    		return status;
-    	Channel channel;
-        String result = "";
-
-        try{
-            channel = session.openChannel("exec");
-            ((ChannelExec) channel).setCommand(command);
-            channel.setInputStream(null);
-            ((ChannelExec) channel).setErrStream(System.err);
-            InputStream in = channel.getInputStream();
-            channel.connect();
-            byte[] tmp = new byte[1024];
-            while (true) {
-                while (in.available() > 0) {
-                    int i = in.read(tmp, 0, 1024);
-                    if (i < 0) break;
-                    result += new String(tmp, 0, i);
-                }
-                if (channel.isClosed()) {
-                    if(channel.getExitStatus() != 0)
-                    	return "exit-status: " + channel.getExitStatus();
-                    break;
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (Exception ee) {
-                    result += ee;
-                }
-            }
-            channel.disconnect();
+    public void channelSetup() {
+        try {
+			channel = session.openChannel("shell");
+			fromServer = new BufferedReader(new InputStreamReader(channel.getInputStream()));  
+	        toServer = channel.getOutputStream();
+            channel.connect(3*1000);
         } catch (Exception e) {
-            result += e;
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }	
+    	
+    public void Exec(String command) {
+    	/*if(!status.equals("ok"))
+    		return status;*/        
+        try{            
+        	toServer.write(command.getBytes());
+        	toServer.flush();
+        } catch (Exception e) {
+			e.printStackTrace();
         }
-        return result;
     }
 }
