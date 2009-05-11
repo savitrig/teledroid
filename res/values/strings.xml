@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="local_service_started">Service Starting...</string>
+    <string name="local_service_stopped">Service Stopping...</string>
+    <string name="local_service_label">Connecting Server...</string>
+    <string name="up_one_level">..</string>
+    <string name="current_dir">.</string>
     <string name="hello">Hello World, Teledroid! \n</string>
     <string name="app_name">Teledroid</string>
 </resources>
