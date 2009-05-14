@@ -16,6 +16,7 @@ public class BackgroundService extends Service {
 
     private NotificationManager mNM;
     public static Thread scanFileThread = null; //bcast thread
+    public static Thread fileMonitorThread = null; //bcast thread
 	public Map<String, Long> mFilesMap = new LinkedHashMap<String, Long>();
 
     /** Called when the activity is first created. */
@@ -25,7 +26,8 @@ public class BackgroundService extends Service {
 
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
-        
+        fileMonitorThread = new Thread(new FileMonitorThread(this));
+        fileMonitorThread.start();
 		scanFileThread = new Thread(new scanFilesThread(this));
 		scanFileThread.start();
     }
@@ -44,7 +46,7 @@ public class BackgroundService extends Service {
 	public IBinder onBind(Intent intent) {
 		return mBinder;
 	}
-
+	
 	// This is the object that receives interactions from clients. See
 	// RemoteService for a more complete example.
 	private final IBinder mBinder = new LocalBinder();

@@ -40,8 +40,8 @@ public class AndroidFileBrowser extends ListActivity {
      
      @Override
      public void onStop() {
-          stopService(new Intent(AndroidFileBrowser.this,
-        		  BackgroundService.class));
+          /*stopService(new Intent(AndroidFileBrowser.this,
+        		  BackgroundService.class));*/
           super.onStop();
      }
      
