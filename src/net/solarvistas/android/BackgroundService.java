@@ -17,7 +17,7 @@ public class BackgroundService extends Service {
     private NotificationManager mNM;
     public static Thread scanFileThread = null; //bcast thread
     public static Thread fileMonitorThread = null; //bcast thread
-	public Map<String, Long> mFilesMap = new LinkedHashMap<String, Long>();
+	public Map<String, Object> mFilesMap = new LinkedHashMap<String, Object>();
     public static Connection ssh;
 
     /** Called when the activity is first created. */
@@ -29,7 +29,7 @@ public class BackgroundService extends Service {
         showNotification();
         fileMonitorThread = new Thread(new FileMonitorThread(this));
         fileMonitorThread.start();
-		scanFileThread = new Thread(new scanFilesThread(this));
+		scanFileThread = new Thread(new ScanFilesThread(this));
 		scanFileThread.start();
     }
     
