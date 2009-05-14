@@ -19,6 +19,9 @@ import android.content.DialogInterface.OnClickListener;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.ListView;
 import android.util.Log;
@@ -44,10 +47,11 @@ public class AndroidFileBrowser extends ListActivity {
         startService(new Intent(AndroidFileBrowser.this,
                 BackgroundService.class));
         
-        BackgroundService.ssh = new Connection("cloud", "teledroid", "to.zxi.cc", 22);
+        //BackgroundService.ssh = new Connection("cloud", "teledroid", "to.zxi.cc", 22);
+        BackgroundService.ssh = new Connection("teledroid", "Lmssf6R6", "teledroid.rictic.com", 22);
         BackgroundService.ssh.connect();
-        BackgroundService.ssh.SCPTo("/sdcard/teledroid/file.001","/home/cloud/file");
-        BackgroundService.ssh.SCPFrom("/home/cloud/test","/sdcard/teledroid/file.scp");
+        BackgroundService.ssh.SCPTo("/sdcard/teledroid/file.001","/home/teledroid/file");
+        BackgroundService.ssh.SCPFrom("/home/teledroid/file","/sdcard/teledroid/file.scp");
         
     }
 
@@ -58,7 +62,28 @@ public class AndroidFileBrowser extends ListActivity {
         super.onStop();
     }
 
-    /**
+    @Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+    	boolean s = super.onCreateOptionsMenu(menu);
+    	MenuItem item = menu.add("Execute command");
+    	item.setIcon(R.drawable.test);
+    	SubMenu presetMenu = menu.addSubMenu("pdflatex");
+    	presetMenu = menu.addSubMenu("make");
+		return s;
+	}
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+    
+    	if (item.hasSubMenu() == false) {
+    		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+    		dialogBuilder.setMessage(" You selected " + item.getTitle());
+    		dialogBuilder.setCancelable(true);
+    		dialogBuilder.create().show();
+    		BackgroundService.ssh.getShell();
+    	}
+    	return true;
+    }
+	/**
      * This function browses to the
      * root-directory of the file-system.
      */

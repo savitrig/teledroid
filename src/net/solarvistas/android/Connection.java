@@ -25,233 +25,268 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 
 public class Connection {
-    String user, pass, host;
-    int port;
-    Session session;
-    String status = "ok";
+	String user, pass, host;
+	int port;
+	Session session;
+	String status = "ok";
 	Channel channel;
-    BufferedReader fromServer;
-    OutputStream toServer; 
-    
-    public Connection(String user, String pass, String host, int port) {
-        this.user = user;
-        this.pass = pass;
-        this.host = host;
-        this.port = port;
-    }
+	BufferedReader fromServer;
+	OutputStream toServer;
 
-    public void connect(){
-    	try {
-            JSch jsch = new JSch();
-            session = jsch.getSession(user, host, port);
-            session.setPassword(pass);
+	public Connection(String user, String pass, String host, int port) {
+		this.user = user;
+		this.pass = pass;
+		this.host = host;
+		this.port = port;
+	}
 
-            //TODO: host key check
-            //jsch.setKnownHosts("/data/data/net.solarvistas.android/files/.ssh/known_hosts");
-            session.setConfig("StrictHostKeyChecking", "no");
+	public void connect() {
+		try {
+			JSch jsch = new JSch();
+			session = jsch.getSession(user, host, port);
+			session.setPassword(pass);
 
-            session.connect();   // making a connection with timeout.
+			// TODO: host key check
+			// jsch.setKnownHosts("/data/data/net.solarvistas.android/files/.ssh/known_hosts");
+			session.setConfig("StrictHostKeyChecking", "no");
 
-        } catch(Exception e){
-        	status = e.toString();
-        }
-    }
-    
-    @Override
-    protected void finalize() throws Throwable {
-    	super.finalize();
-    	//session.disconnect();
-    }
+			session.connect(); // making a connection with timeout.
 
-    public void channelSetup() {
-        try {
+		} catch (Exception e) {
+			status = e.toString();
+		}
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+		// session.disconnect();
+	}
+
+	public void channelSetup() {
+		try {
 			channel = session.openChannel("shell");
-			fromServer = new BufferedReader(new InputStreamReader(channel.getInputStream()));  
-	        toServer = channel.getOutputStream();
-            channel.connect(3*1000);
-        } catch (Exception e) {
+			fromServer = new BufferedReader(new InputStreamReader(channel
+					.getInputStream()));
+			toServer = channel.getOutputStream();
+			channel.connect(3 * 1000);
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    }	
-    	
-    public void Exec(String command) {
-    	/*if(!status.equals("ok"))
-    		return status;*/        
-        try{            
-        	toServer.write(command.getBytes());
-        	toServer.flush();
-        } catch (Exception e) {
+	}
+
+	public void Exec(String command) {
+		/*
+		 * if(!status.equals("ok")) return status;
+		 */
+		try {
+			toServer.write(command.getBytes());
+			toServer.flush();
+		} catch (Exception e) {
 			e.printStackTrace();
-        }
-    }
-    
-    public Channel getShell() {
-        Channel channel = null;
-        try {
-            channel = session.openChannel("shell");
-            channel.connect();
-        } catch (JSchException e) {
-            Log.d("teledroid", "JSchException", e);
-        }
-        return channel;
-    }
-    
-    static int checkAck(InputStream in) throws IOException {
-    	//implement later.
-    	return 0;
-    }
+		}
+	}
 
-    public boolean SCPFrom(String rfile, String lfile) {
-        FileOutputStream fos = null;
-        try {
-            String prefix = null;
-            if (new File(lfile).isDirectory()) {
-                prefix = lfile + File.separator;
-            }
+	public Channel getShell() {
+		Channel channel = null;
+		try {
+			channel = session.openChannel("shell");
+			channel.connect();
+		} catch (JSchException e) {
+			Log.d("teledroid", "JSchException", e);
+		}
+		return channel;
+	}
 
-            // exec 'scp -f rfile' remotely
-            String command = "scp -f " + rfile;
-            Channel channel = session.openChannel("exec");
-            ((ChannelExec) channel).setCommand(command);
+	static int checkAck(InputStream in) throws IOException {
+		int b=in.read();
+	    // b may be 0 for success,
+	    //          1 for error,
+	    //          2 for fatal error,
+	    //          -1
+	    if(b==0) return b;
+	    if(b==-1) return b;
 
-            // get I/O streams for remote scp
-            OutputStream out = channel.getOutputStream();
-            InputStream in = channel.getInputStream();
+	    if(b==1 || b==2){
+	      StringBuffer sb=new StringBuffer();
+	      int c;
+	      do {
+		c=in.read();
+		sb.append((char)c);
+	      }
+	      while(c!='\n');
+	      if(b==1){ // error
+		System.out.print(sb.toString());
+	      }
+	      if(b==2){ // fatal error
+		System.out.print(sb.toString());
+	      }
+	    }
+	    return b;
+	}
 
-            channel.connect();
+	public boolean SCPFrom(String rfile, String lfile) {
+		FileOutputStream fos = null;
+		try {
+			String prefix = null;
+			if (new File(lfile).isDirectory()) {
+				prefix = lfile + File.separator;
+			}
 
-            byte[] buf = new byte[1024];
+			// exec 'scp -f rfile' remotely
+			String command = "scp -f " + rfile;
+			Channel channel = session.openChannel("exec");
+			((ChannelExec) channel).setCommand(command);
 
-            // send '\0'             C0644c
-            buf[0] = 0;
-            out.write(buf, 0, 1);
-            out.flush();
+			// get I/O streams for remote scp
+			OutputStream out = channel.getOutputStream();
+			InputStream in = channel.getInputStream();
 
-            while (true) {
-                int c = checkAck(in);
-                if (c != 0/*'C'*/) {
-                    break;
-                }
+			channel.connect();
 
-                // read '0644 '
-                in.read(buf, 0, 5);
+			byte[] buf = new byte[1024];
 
-                long filesize = 0L;
-                while (true) {
-                    if (in.read(buf, 0, 1) < 0) {
-                        // error
-                        break;
-                    }
-                    if (buf[0] == ' ') break;
-                    filesize = filesize * 10L + (long) (buf[0] - '0');
-                }
+			// send '\0'
+			buf[0] = 0;
+			out.write(buf, 0, 1);
+			out.flush();
 
-                String file;
-                for (int i = 0; ; i++) {
-                    in.read(buf, i, 1);
-                    if (buf[i] == (byte) 0x0a) {
-                        file = new String(buf, 0, i);
-                        break;
-                    }
-                }
+			while (true) {
+				int c = checkAck(in);
+				if (c != 'C') {
+					break;
+				}
 
-                //System.out.println("filesize="+filesize+", file="+file);
+				// read '0644 '
+				in.read(buf, 0, 5);
 
-                // send '\0'
-                buf[0] = 0;
-                out.write(buf, 0, 1);
-                out.flush();
+				long filesize = 0L;
+				while (true) {
+					if (in.read(buf, 0, 1) < 0) {
+						break;// error
+					}
+					if (buf[0] == ' ')
+						break;
+					filesize = filesize * 10L + (long) (buf[0] - '0');
+				}
 
-                // read a content of lfile
-                fos = new FileOutputStream(prefix == null ? lfile : prefix + file);
-                int foo;
-                while (true) {
-                    if (buf.length < filesize) foo = buf.length;
-                    else foo = (int) filesize;
-                    foo = in.read(buf, 0, foo);
-                    if (foo < 0) {
-                        // error
-                        break;
-                    }
-                    fos.write(buf, 0, foo);
-                    filesize -= foo;
-                    if (filesize == 0L) break;
-                }
-                fos.close();
+				String file = null;
+				for (int i = 0;; i++) {
+					in.read(buf, i, 1);
+					if (buf[i] == (byte) 0x0a) {
+						file = new String(buf, 0, i);
+						break;
+					}
+				}
 
-                if(checkAck(in) != 0) return false;
+				// System.out.println("filesize="+filesize+", file="+file);
 
-                // send '\0'
-                buf[0] = 0;out.write(buf, 0, 1);out.flush();
-            }
-        } catch (Exception e) {
-            System.out.println(e);
-            try {
-                if (fos != null) fos.close();
-            } catch (Exception ee) {
-            }
-        }
-        Log.d("teledroid", "SCPFrom " + rfile + " : " + lfile);
-        return true;
-    }
+				// send '\0'
+				buf[0] = 0;
+				out.write(buf, 0, 1);
+				out.flush();
 
-    public boolean SCPTo(String lfile, String rfile) {
-        FileInputStream fis;
-        try {
-            String command = "scp -p -t " + rfile;
-            Channel channel = session.openChannel("exec");
-            ((ChannelExec) channel).setCommand(command);
+				// read a content of lfile
+				fos = new FileOutputStream(prefix == null ? lfile : prefix
+						+ file);
+				int foo;
+				while (true) {
+					if (buf.length < filesize)
+						foo = buf.length;
+					else
+						foo = (int) filesize;
+					foo = in.read(buf, 0, foo);
+					if (foo < 0) {
+						// error
+						break;
+					}
+					fos.write(buf, 0, foo);
+					filesize -= foo;
+					if (filesize == 0L)
+						break;
+				}
+				fos.close();
+				fos = null;
 
-            // get I/O streams for remote scp
-            OutputStream out = channel.getOutputStream();
-            InputStream in = channel.getInputStream();
-            channel.connect();
+				if (checkAck(in) != 0) {
+					return false;
+				}
 
-            if (checkAck(in) != 0) {
-                return false;
-            }
+				// send '\0'
+				buf[0] = 0;
+				out.write(buf, 0, 1);
+				out.flush();
 
-            // send "C0644 filesize filename",
-            // where filename should not include '/'
-            long filesize = (new File(lfile)).length();
-            command = "C0644 " + filesize + " ";
-            if (lfile.lastIndexOf('/') > 0) {
-                command += lfile.substring(lfile.lastIndexOf('/') + 1);
-            } else {
-                command += lfile;
-            }
-            command += "\n";
-            out.write(command.getBytes());
-            out.flush();
-            if (checkAck(in) != 0) {
-                return false;
-            }
+			}
+		} catch (Exception e) {
+			System.out.println(e);
+			try {
+				if (fos != null)
+					fos.close();
+			} catch (Exception ee) {
+			}
+		}
+		Log.d("teledroid", "SCPFrom " + rfile + " : " + lfile);
+		return true;
+	}
 
+	public boolean SCPTo(String lfile, String rfile) {
+		FileInputStream fis;
+		try {
+			String command = "scp -p -t " + rfile;
+			Channel channel = session.openChannel("exec");
+			((ChannelExec) channel).setCommand(command);
 
-            // send content of lfile
-            fis=new FileInputStream(lfile);
-            byte[] buf = new byte[1024];
-            while (true) {
-                int len = fis.read(buf, 0, buf.length);
-                if (len <= 0) break;
-                out.write(buf, 0, len); //out.flush();
-            }
-            fis.close();
-            // send '\0'
-            buf[0] = 0;
-            out.write(buf, 0, 1);
-            out.flush();
-            if (checkAck(in) != 0) {
-                return false;
-            }
-            out.close();
-        } catch (JSchException e) {
-            Log.d("teledroid", "JSchException", e);
-        } catch (IOException e) {
-            Log.d("teledroid", "JSchException", e);
-        }
-        Log.d("teledroid", "SCPTo " + lfile + " : " + rfile);
-        return true;
-    }
+			// get I/O streams for remote scp
+			OutputStream out = channel.getOutputStream();
+			InputStream in = channel.getInputStream();
+			channel.connect();
+
+			if (checkAck(in) != 0) {
+				return false;
+			}
+
+			// send "C0644 filesize filename",
+			// where filename should not include '/'
+			long filesize = (new File(lfile)).length();
+			command = "C0644 " + filesize + " ";
+			if (lfile.lastIndexOf('/') > 0) {
+				command += lfile.substring(lfile.lastIndexOf('/') + 1);
+			} else {
+				command += lfile;
+			}
+			command += "\n";
+			out.write(command.getBytes());
+			out.flush();
+			if (checkAck(in) != 0) {
+				return false;
+			}
+
+			// send content of lfile
+			fis = new FileInputStream(lfile);
+			byte[] buf = new byte[1024];
+			while (true) {
+				int len = fis.read(buf, 0, buf.length);
+				if (len <= 0)
+					break;
+				out.write(buf, 0, len); // out.flush();
+			}
+			fis.close();
+			// send '\0'
+			buf[0] = 0;
+			out.write(buf, 0, 1);
+			out.flush();
+			if (checkAck(in) != 0) {
+				return false;
+			}
+			out.close();
+		} catch (JSchException e) {
+			Log.d("teledroid", "JSchException", e);
+		} catch (IOException e) {
+			Log.d("teledroid", "JSchException", e);
+		}
+		Log.d("teledroid", "SCPTo " + lfile + " : " + rfile);
+		return true;
+	}
 }
