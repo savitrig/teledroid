@@ -7,6 +7,8 @@
 #include <sys/inotify.h>
 #include <errno.h>
 
+#define INFO_LENGTH (50+FILENAME_MAX)
+
 int main(int argc, char *argv[])
 {
     int c;
@@ -15,9 +17,9 @@ int main(int argc, char *argv[])
 	char event_buf[512];
     struct inotify_event *event;
 	int event_mask = IN_ALL_EVENTS;
-    int event_count = 1;
+    int event_count = 0;
 	int print_files = 0;
-	int verbose = 2;
+	int verbose = 0;
 	int width = 80;
 	char **file_names;
 	int file_count;
@@ -33,7 +35,7 @@ int main(int argc, char *argv[])
         case 'm':
             event_mask = strtol(optarg, NULL, 0);
             break;
-        case 'c':
+		case 'c':
             event_count = atoi(optarg);
             break;
 		case 'p':
@@ -51,18 +53,11 @@ int main(int argc, char *argv[])
             exit(1);
         }
     } while (1);
-
-	printf("iNotify is now running. init::");
-	for(i=0;i<argc; i++)
-		printf(" %s", argv[i]);
-	printf("\n");
-	int ipoint = 0;
 	
     if (argc <= optind) {
         printf("Usage: %s [-m eventmask] [-c count] [-p] [-v verbosity] path [path ...]\n", argv[0]);
 		return 1;
     }
-	printf(">>Monitor Point %d\n", ipoint++);
 
     nfd = inotify_init();
     if(nfd < 0) {
@@ -84,16 +79,13 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
-	printf(">>Monitor Point %d\n", ipoint++);
 
 	buf = malloc(width + 2);
-	printf(">>Monitor Point %d\n", ipoint++);
 	
-	int icount = 0, ocount = 0;
-	
+
     while(1) {
-		if(ocount++<7)
-			printf("\tOutter count: %d\n", ocount);
+		fflush(stdout);
+		
 		int event_pos = 0;
         res = read(nfd, event_buf, sizeof(event_buf));
         if(res < (int)sizeof(*event)) {
@@ -103,12 +95,44 @@ int main(int argc, char *argv[])
             return 1;
         }
 		//printf("got %d bytes of event information\n", res);
-		while(res >= (int)sizeof(*event)) {
-			if(icount++<7)
-				printf("\t\tInner count: %d\n", icount);
-			
+		while(res >= (int)sizeof(*event)) {	
 			int event_size;
 			event = (struct inotify_event *)(event_buf + event_pos);
+			
+			char info[INFO_LENGTH];
+
+			if (event->len)
+				strncpy (info, event->name, INFO_LENGTH -1);
+		    else
+				strncpy(info, file_names[event->wd + id_offset], FILENAME_MAX -1);
+		
+			if (event->mask & IN_ACCESS)
+				strncat(info, ", ACCESS", INFO_LENGTH -1);
+		    if (event->mask & IN_ATTRIB)
+				strncat(info, ", ATTRIB", INFO_LENGTH -1);
+		    if (event->mask & IN_CLOSE_WRITE)
+				strncat(info, ", CLOSE_WRITE", INFO_LENGTH -1);
+		    if (event->mask & IN_CLOSE_NOWRITE)
+				strncat(info, ", CLOSE_NOWRITE", INFO_LENGTH -1);
+		    if (event->mask & IN_CREATE)
+				strncat(info, ", CREATE", INFO_LENGTH -1);
+		    if (event->mask & IN_DELETE)
+				strncat(info, ", DETELE", INFO_LENGTH -1);
+		    if (event->mask & IN_DELETE_SELF)
+				strncat(info, ", DELETE_SELF", INFO_LENGTH -1);
+		    if (event->mask & IN_MODIFY)
+				strncat(info, ", MODIFY", INFO_LENGTH -1);
+		    if (event->mask & IN_MOVE_SELF)
+				strncat(info, ", MOVE_SELF", INFO_LENGTH -1);
+		    if (event->mask & IN_MOVED_FROM)
+				strncat(info, ", MOVED_FROM", INFO_LENGTH -1);
+		    if (event->mask & IN_MOVED_TO)
+				strncat(info, ", MOVED_TO", INFO_LENGTH -1);
+		    if (event->mask & IN_OPEN)
+				strncat(info, ", OPEN", INFO_LENGTH -1);
+
+			printf("[i]%s\n", info);
+			
 			if(verbose >= 2)
 		        printf("%s: %08x %08x \"%s\"\n", file_names[event->wd + id_offset], event->mask, event->cookie, event->len ? event->name : "");
 			else if(verbose >= 2)
