@@ -18,6 +18,7 @@ public class BackgroundService extends Service {
     public static Thread scanFileThread = null; //bcast thread
     public static Thread fileMonitorThread = null; //bcast thread
 	public Map<String, Long> mFilesMap = new LinkedHashMap<String, Long>();
+    public static Connection ssh;
 
     /** Called when the activity is first created. */
     @Override
