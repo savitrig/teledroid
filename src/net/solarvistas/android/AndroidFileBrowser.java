@@ -39,6 +39,8 @@ public class AndroidFileBrowser extends ListActivity {
 
     private static final int START_SERVER_ID = Menu.FIRST;
     private static final int STOP_SERVER_ID = Menu.FIRST+1;
+    
+    private String type;
 
     /**
      * Called when the activity is first created.
@@ -144,9 +146,31 @@ public class AndroidFileBrowser extends ListActivity {
     }
 
     private void openFile(File aFile) {
-        Intent myIntent = new Intent(android.content.Intent.ACTION_VIEW,
-                Uri.parse("file://" + aFile.getAbsolutePath()));
-        startActivity(myIntent);
+        String fileName = aFile.getName();
+        if (checkEndsWithInStringArray(fileName, getResources().
+                getStringArray(R.array.fileEndingImage))) {
+            type = "image/*";
+        } else if (checkEndsWithInStringArray(fileName, getResources().
+                getStringArray(R.array.fileEndingWebText))) {
+            //type = getResources().getDrawable(R.drawable.webtext);
+        } else if (checkEndsWithInStringArray(fileName, getResources().
+                getStringArray(R.array.fileEndingPackage))) {
+            //type = getResources().getDrawable(R.drawable.packed);
+        } else if (checkEndsWithInStringArray(fileName, getResources().
+                getStringArray(R.array.fileEndingAudio))) {
+            type = "audio/*";
+        } else {
+            type = "text/*";
+        }
+        
+    	Intent intent = new Intent();  
+    	intent.setAction(android.content.Intent.ACTION_VIEW);  
+    	intent.setDataAndType(Uri.fromFile(aFile), type);  
+    	startActivity(intent); 
+        
+        /*Intent myIntent = new Intent(android.content.Intent.ACTION_VIEW,
+                Uri.fromFile(aFile));
+        startActivity(myIntent);*/
     }
 
     private void fill(File[] files) {

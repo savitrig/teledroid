@@ -15,7 +15,7 @@ import android.widget.Toast;
 public class BackgroundService extends Service {
 
     private NotificationManager mNM;
-    public static Thread scanFileThread = null; //bcast thread
+    public static Thread scanFilesThread = null; //bcast thread
     public static Thread fileMonitorThread = null; //bcast thread
 	public Map<String, Object> mFilesMap = new LinkedHashMap<String, Object>();
     public static Connection ssh;
@@ -27,15 +27,17 @@ public class BackgroundService extends Service {
 
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
-        fileMonitorThread = new Thread(new FileMonitorThread(this));
-        fileMonitorThread.start();
-		scanFileThread = new Thread(new ScanFilesThread(this));
-		scanFileThread.start();
+        //fileMonitorThread = new Thread(new FileMonitorThread(this));
+        //fileMonitorThread.start();
+        ScanFilesThread.stopSignal = false;
+		scanFilesThread = new Thread(new ScanFilesThread(this));
+		scanFilesThread.start();
     }
     
 	@Override
 	public void onDestroy() {
 		// Cancel the persistent notification.
+        ScanFilesThread.stopSignal = true;
 		mNM.cancel(R.string.local_service_started);	
 
 		// Tell the user we stopped.
@@ -75,7 +77,7 @@ public class BackgroundService extends Service {
 
         // The PendingIntent to launch our activity if the user selects this notification
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, Teledroid.class), 0);
+                new Intent(this, AndroidFileBrowser.class), 0);
 
         // Set the info for the views that show in the notification panel.
         notification.setLatestEventInfo(this, getText(R.string.local_service_label),
