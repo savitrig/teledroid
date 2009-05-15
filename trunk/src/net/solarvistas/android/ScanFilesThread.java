@@ -1,9 +1,9 @@
 package net.solarvistas.android;
 
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -21,19 +21,21 @@ public class ScanFilesThread implements Runnable {
     public static Thread synThread = null; //bcast thread
     private JSONObject mServerJson;
     private JSONObject mLocalJson;
-    private static final int PERIOD = 30000;
+    private static final int PERIOD = 5000;
+    private static final int TIMEDIFF = 1000;
+    public static boolean stopSignal = false;
     
     /*Flag 0: Server to Local; Flag 1: Local to Server; */
     public enum Flag { ServerToClient, ClientToServer }
     
-    Connection mShell = null;
+    //Connection mShell = null;
 
     public ScanFilesThread(BackgroundService bs) {
     	this.mFilesMap = bs.mFilesMap; 
     }
     
 	public void run() {
-		while (true) {
+		while (!stopSignal) {
 			getFilesModifiedTime(rootDir, mFilesMap);
 			mLocalJson = new JSONObject(mFilesMap);
 			Log.d("Files Map", mFilesMap.toString());
@@ -110,32 +112,59 @@ public class ScanFilesThread implements Runnable {
 			try {
 				Object value2 = o2.get(key);
 				if (value1 instanceof Long && value2 instanceof Long)
-					compareAndSyn(key, (Long)value1, (Long)value2, flag);
+					compareAndSyn(key, (Long)value1, (Long)value2, flag, (Long)value1);	
 				else if (value1 instanceof JSONObject && value2 instanceof JSONObject)
 					autoSyn((JSONObject)value1, (JSONObject)value2, flag);
 				// else for one side Long, one side JSONObject;
 			}
 			catch (JSONException e) {
-				syn(key, flag);
+				if (value1 instanceof Long)
+					syn(key, flag, (Long)value1);
+				else
+					syn(key, flag, null);					
 			}
 			//Log.d("Key", (String)i.next());
 		}
     }
     
-    private void compareAndSyn(String key, Long v1, Long v2, Flag flag) {
-    	if (v1.compareTo(v2) > 0)
-    		syn (key, flag);    	
+    private void compareAndSyn(String key, Long v1, Long v2, Flag flag, Long value) {
+    	if (v1 - v2 > TIMEDIFF) {
+	    	Log.d("Test", Long.toString(v1 - v2));
+    		syn (key, flag, value);
+    	
+    	}
     }
     
-    private void syn(String fileName, Flag flag) {
+    private void syn(String fileName, Flag flag, Long value) {
     	String parentPath = "/home/teledroid/";
     	
     	switch (flag) {
     	case ServerToClient:
-    		BackgroundService.ssh.SCPFrom(parentPath+fileName, fileName);
+    		Log.d("teledroid","transferring " + fileName + " from server");
+    		if (value != null) {
+	    		BackgroundService.ssh.SCPFrom(parentPath+fileName, fileName);
+	    		File f = new File(fileName);
+	    		f.setLastModified(value);
+    		}
     		break;
     	case ClientToServer:
     		BackgroundService.ssh.SCPTo(fileName, parentPath+fileName);
+    	    String pattern = "yyyyMMddHHmm.ss";
+    	    SimpleDateFormat format = new SimpleDateFormat(pattern);
+    	    Date date;
+			String formatDate = format.format((new Date(value)));
+	    	Log.d("TestTime", formatDate);
+
+    		try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+    		Connection mShell = BackgroundService.ssh;
+    		mShell.channelSetup();
+            mShell.Exec("touch -t "+formatDate+" "+parentPath+fileName+"\n");
+            mShell.channel.disconnect();
     		break;
     	default:break;
     	}
