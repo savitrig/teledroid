@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry kind="src" path=""/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="jsch-0.1.41.jar" sourcepath="/Users/peter/Downloads/jsch-0.1.41/src"/>
-	<classpathentry kind="output" path="bin"/>
-</classpath>
