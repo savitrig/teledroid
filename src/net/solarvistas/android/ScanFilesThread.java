@@ -36,7 +36,7 @@ public class ScanFilesThread implements Runnable {
 	    
 		SynThread remoteScanner = null;
 		while (!stopSignal) {
-			if (remoteScanner != null && !remoteScanner.finished){
+			if (remoteScanner == null || remoteScanner.finished){
 				getFilesModifiedTime(AndroidFileBrowser.rootDirectory, mFilesMap);
 				mLocalJson = new JSONObject(mFilesMap);
 				Log.d("Files Map", mFilesMap.toString());
