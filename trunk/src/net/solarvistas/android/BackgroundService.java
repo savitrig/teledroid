@@ -38,7 +38,7 @@ public class BackgroundService extends Service {
 	public void onDestroy() {
 		// Cancel the persistent notification.
         ScanFilesThread.stopSignal = true;
-		mNM.cancel(R.string.local_service_started);	
+		mNM.cancel(R.string.local_service_started);
 
 		// Tell the user we stopped.
 		Toast.makeText(this, R.string.local_service_stopped,

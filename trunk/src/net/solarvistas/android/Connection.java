@@ -29,9 +29,7 @@ public class Connection {
 	int port;
 	Session session;
 	String status = "ok";
-	Channel channel;
-	BufferedReader fromServer;
-	OutputStream toServer;
+
 
 	public Connection(String user, String pass, String host, int port) {
 		this.user = user;
@@ -40,21 +38,17 @@ public class Connection {
 		this.port = port;
 	}
 
-	public void connect() {
-		try {
-			JSch jsch = new JSch();
-			session = jsch.getSession(user, host, port);
-			session.setPassword(pass);
+	public void connect() throws JSchException {
+		JSch jsch = new JSch();
+		session = jsch.getSession(user, host, port);
+		session.setPassword(pass);
 
-			// TODO: host key check
-			// jsch.setKnownHosts("/data/data/net.solarvistas.android/files/.ssh/known_hosts");
-			session.setConfig("StrictHostKeyChecking", "no");
+		// TODO: host key check
+		// jsch.setKnownHosts("/data/data/net.solarvistas.android/files/.ssh/known_hosts");
+		session.setConfig("StrictHostKeyChecking", "no");
 
-			session.connect(); // making a connection with timeout.
+		session.connect(); // making a connection with timeout.
 
-		} catch (Exception e) {
-			status = e.toString();
-		}
 	}
 
 	@Override
@@ -63,41 +57,20 @@ public class Connection {
 		// session.disconnect();
 	}
 
-	public void channelSetup() {
-		try {
-			channel = session.openChannel("shell");
-			fromServer = new BufferedReader(new InputStreamReader(channel
-					.getInputStream()));
-			toServer = channel.getOutputStream();
-			channel.connect(3 * 1000);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public void Exec(String command) {
-		/*
-		 * if(!status.equals("ok")) return status;
-		 */
-		try {
-			toServer.write(command.getBytes());
-			toServer.flush();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public Channel getShell() {
-		Channel channel = null;
-		try {
-			channel = session.openChannel("shell");
-			channel.connect();
-		} catch (JSchException e) {
-			Log.d("teledroid", "JSchException", e);
-		}
+	public Channel newShell() throws JSchException, IOException {
+		Channel channel = session.openChannel("shell");
+		channel.connect(3 * 1000);
 		return channel;
 	}
+
+	
+	public Channel Exec(String command) throws JSchException, IOException {
+		Channel channel = newShell();
+		channel.getOutputStream().write(command.getBytes());
+		channel.getOutputStream().flush();
+		return channel;
+	}
+
 
 	static int checkAck(InputStream in) throws IOException {
 		int b=in.read();
