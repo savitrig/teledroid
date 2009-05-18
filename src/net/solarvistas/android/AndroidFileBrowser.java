@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.jcraft.jsch.JSchException;
+
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.ContentUris;
@@ -52,10 +54,12 @@ public class AndroidFileBrowser extends ListActivity {
         
         //BackgroundService.ssh = new Connection("cloud", "teledroid", "to.zxi.cc", 22);
         BackgroundService.ssh = new Connection("teledroid", "Lmssf6R6", "teledroid.rictic.com", 22);
-        BackgroundService.ssh.connect();
-        //BackgroundService.ssh.SCPTo("/sdcard/aa.txt","/home/teledroid/sdcard/aa.txt"); // ClientToServer
-        //BackgroundService.ssh.SCPFrom("/home/teledroid/sdcard/test.txt","/sdcard/test.txt"); // ServerToClient
-        //startService(new Intent(AndroidFileBrowser.this, BackgroundService.class));
+        try {
+			BackgroundService.ssh.connect();
+		} catch (JSchException e) {
+			Log.e("teledroid.AndroidFileBrowser", "unable to connect");
+			e.printStackTrace();
+		}
     }
 
     @Override
@@ -86,14 +90,13 @@ public class AndroidFileBrowser extends ListActivity {
 	    case STOP_SERVER_ID:
 	    	stopService(new Intent(AndroidFileBrowser.this, BackgroundService.class));
 	        return true;
-        }    
+        }
         
     	if (item.hasSubMenu() == false) {
     		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
     		dialogBuilder.setMessage(" You selected " + item.getTitle());
     		dialogBuilder.setCancelable(true);
     		dialogBuilder.create().show();
-    		BackgroundService.ssh.getShell();
     	}
     	return true;
     }

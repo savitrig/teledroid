@@ -1,6 +1,9 @@
 package net.solarvistas.android;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -10,6 +13,9 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.JSchException;
 
 import android.os.Handler;
 import android.os.Message;
@@ -151,7 +157,6 @@ public class ScanFilesThread implements Runnable {
     		BackgroundService.ssh.SCPTo(fileName, parentPath+fileName);
     	    String pattern = "yyyyMMddHHmm.ss";
     	    SimpleDateFormat format = new SimpleDateFormat(pattern);
-    	    Date date;
 			String formatDate = format.format((new Date(value)));
 	    	Log.d("TestTime", formatDate);
 
@@ -161,12 +166,16 @@ public class ScanFilesThread implements Runnable {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-    		Connection mShell = BackgroundService.ssh;
-    		mShell.channelSetup();
-            mShell.Exec("touch -t "+formatDate+" "+parentPath+fileName+"\n");
-            mShell.channel.disconnect();
+    		Connection con = BackgroundService.ssh;
+    		Channel execChannel = null;
+    		try {
+				execChannel = con.Exec("touch -t "+formatDate+" "+parentPath+fileName+"\n");
+			} catch (Exception e) {
+				Log.e("teledroid.ScanFilesThread.syn", "unable to touch file " + parentPath+fileName);
+				e.printStackTrace();
+			}
+	        if (execChannel != null) execChannel.disconnect();
     		break;
-    	default:break;
     	}
     }
     
