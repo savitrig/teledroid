@@ -11,23 +11,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.jcraft.jsch.JSchException;
-
 import android.app.AlertDialog;
 import android.app.ListActivity;
-import android.content.ContentUris;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
 import android.widget.ListView;
-import android.util.Log;
+
+import com.jcraft.jsch.JSchException;
 
 public class AndroidFileBrowser extends ListActivity {
 
@@ -74,8 +72,8 @@ public class AndroidFileBrowser extends ListActivity {
     	boolean s = super.onCreateOptionsMenu(menu);
     	MenuItem item = menu.add("Execute command");
     	item.setIcon(R.drawable.test);
-    	SubMenu presetMenu = menu.addSubMenu("pdflatex");
-    	presetMenu = menu.addSubMenu("make");
+    	menu.addSubMenu("pdflatex");
+    	menu.addSubMenu("make");
         menu.add(0, START_SERVER_ID, 0, "Start Service");
         menu.add(0, STOP_SERVER_ID, 0, "Stop Service");
 		return s;

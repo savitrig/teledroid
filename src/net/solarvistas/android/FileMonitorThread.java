@@ -1,11 +1,11 @@
 package net.solarvistas.android;
 
-import android.util.Log;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+
+import android.util.Log;
 
 
 public class FileMonitorThread implements Runnable {
@@ -16,7 +16,7 @@ public class FileMonitorThread implements Runnable {
     Process mPNotify;
 	int mRunningStatus;
     String mTarget = "/sdcard/teledroid";
-    List<String> mFileChangeList = new ArrayList();
+    List<String> mFileChangeList = new ArrayList<String>();
 
 	final String inotify = "/data/inotify ";//data/net.ssolarvistas.android/libs/";
     final ArrayList<String> mask = new ArrayList<String>();
