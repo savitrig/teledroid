@@ -1,13 +1,17 @@
 ifneq ($(TARGET_SIMULATOR),true)
 
 LOCAL_PATH:= $(call my-dir)
-
-
 include $(CLEAR_VARS)
+
 LOCAL_SRC_FILES:= inotify.c
-LOCAL_MODULE := inotify
-#LOCAL_STATIC_LIBRARIES := libcutils libc
-LOCAL_CFLAGS += -Werror -Wall
-include $(BUILD_EXECUTABLE)
+LOCAL_MODULE := libinotifyjni
+LOCAL_C_INCLUDES += $(JNI_H_INCLUDE)
+LOCAL_STATIC_LIBRARIES :=
+LOCAL_SHARED_LIBRARIES := libutils
+#LOCAL_CFLAGS += -Werror -Wall
+
+LOCAL_PRELINK_MODULE := false
+
+include $(BUILD_SHARED_LIBRARY)
 
 endif  # TARGET_SIMULATOR != true
