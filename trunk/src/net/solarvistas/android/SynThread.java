@@ -4,12 +4,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.JSchException;
-
-import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+
+import com.jcraft.jsch.Channel;
 
 public class SynThread implements Runnable {
     ScanFilesThread scanFiles;

@@ -1,10 +1,6 @@
 package net.solarvistas.android;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -14,12 +10,11 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.JSchException;
-
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+
+import com.jcraft.jsch.Channel;
 
 public class ScanFilesThread implements Runnable {
 	Map<String, Object> mFilesMap;
@@ -91,9 +86,10 @@ public class ScanFilesThread implements Runnable {
                 		mServerJson = new JSONObject((String)msg.obj);
 					} catch (JSONException e) {
 						e.printStackTrace();
+						return;
 					}
-					for (Iterator i = mServerJson.keys(); i.hasNext();) {
-						Log.d("Key", (String)i.next());
+					for (Iterator<String> i = mServerJson.keys(); i.hasNext();) {
+						Log.d("Key", i.next());
 					}
 					autoSyn(mServerJson, mLocalJson, Flag.ServerToClient);
 					autoSyn(mLocalJson, mServerJson, Flag.ClientToServer);
@@ -106,9 +102,8 @@ public class ScanFilesThread implements Runnable {
     };
     
     private void autoSyn(JSONObject o1, JSONObject o2, Flag flag) {    	
-		for (Iterator i = o1.keys(); i.hasNext();) {
-				
-			String key = (String)i.next();
+    	for (Iterator<String> i = o1.keys(); i.hasNext();) {
+			String key = i.next();
 			Object value1 = null;
 			try {
 				value1 = o1.get(key);
@@ -121,7 +116,7 @@ public class ScanFilesThread implements Runnable {
 					compareAndSyn(key, (Long)value1, (Long)value2, flag, (Long)value1);	
 				else if (value1 instanceof JSONObject && value2 instanceof JSONObject)
 					autoSyn((JSONObject)value1, (JSONObject)value2, flag);
-				// else for one side Long, one side JSONObject;
+				//TODO: else for one side Long, one side JSONObject;
 			}
 			catch (JSONException e) {
 				if (value1 instanceof Long)
