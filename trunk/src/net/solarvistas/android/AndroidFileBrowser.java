@@ -25,6 +25,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 
+import com.anddev.filebrowser.IconifiedText;
+import com.anddev.filebrowser.IconifiedTextListAdapter;
 import com.jcraft.jsch.JSchException;
 
 public class AndroidFileBrowser extends ListActivity {
