@@ -11,7 +11,7 @@ import com.jcraft.jsch.Channel;
 
 public class SynThread implements Runnable {
     ScanFilesThread scanFiles;
-    
+    public boolean finished = false;
     public SynThread(ScanFilesThread sft) {
     	this.scanFiles = sft;
     }
@@ -22,8 +22,8 @@ public class SynThread implements Runnable {
 		} catch (Exception e) {
 			Log.e("teledroid.SynThread.run", "Error getting dir-print info from server");
 			e.printStackTrace();
-			return;
 		}
+		finished = true;
 	}
 
     private void getServerInfo(Channel channel) throws IOException {
@@ -39,8 +39,7 @@ public class SynThread implements Runnable {
 				scanFiles.getServerInfoHandler.sendMessage(m);
 				channel.disconnect();
 				return;
-			}	  
+			}
     	}
-       
     }
 }
