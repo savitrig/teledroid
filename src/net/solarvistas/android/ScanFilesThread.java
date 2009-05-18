@@ -17,46 +17,35 @@ import android.util.Log;
 import com.jcraft.jsch.Channel;
 
 public class ScanFilesThread implements Runnable {
-	Map<String, Object> mFilesMap;
-	File rootDir = new File("/sdcard/");
     public static Thread synThread = null; //bcast thread
+    private static final int PERIOD   = 5 * 1000;
+    private static final int TIMEDIFF = 1 * 1000;
+    public static boolean stopSignal = false;
     private JSONObject mServerJson;
     private JSONObject mLocalJson;
-    private static final int PERIOD = 5000;
-    private static final int TIMEDIFF = 1000;
-    public static boolean stopSignal = false;
-    
     /*Flag 0: Server to Local; Flag 1: Local to Server; */
     public enum Flag { ServerToClient, ClientToServer }
     
     //Connection mShell = null;
 
     public ScanFilesThread(BackgroundService bs) {
-    	this.mFilesMap = bs.mFilesMap; 
     }
     
 	public void run() {
+		Map<String, Object> mFilesMap = new LinkedHashMap<String, Object>();
+	    
+	    
 		while (!stopSignal) {
-			getFilesModifiedTime(rootDir, mFilesMap);
+			getFilesModifiedTime(AndroidFileBrowser.rootDirectory, mFilesMap);
 			mLocalJson = new JSONObject(mFilesMap);
 			Log.d("Files Map", mFilesMap.toString());
 	
-			/*
-			 * Set s = mFilesMap.entrySet();
-			 * for (Iterator i = s.iterator(); i.hasNext();) {
-				Entry<String, Long> e = (Entry<String, Long>)i.next();
-				Log.d(e.getKey(), new Long(e.getValue()).toString());
-			}*/
-			
 			synThread = new Thread(new SynThread(this));
 			synThread.start();
 			
 			try {
 				Thread.sleep(PERIOD);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			} catch (InterruptedException e) {}
 		}
 	}
 	
@@ -173,32 +162,5 @@ public class ScanFilesThread implements Runnable {
     		break;
     	}
     }
-    
-    /*private void getFileFromServer(String localFileName) {
-        FileOutputStream fos; 
-        DataOutputStream dos;
-        
-    	try {
-    		File f = new File(localFileName);
-    		fos = new FileOutputStream(f);
-    		dos=new DataOutputStream(fos);
-
-    		//while (true) {
-          	  try {
-				  String msg;// = mShell.fromServer.readLine();
-				  do {
-					  msg = mShell.fromServer.readLine();
-					  Log.d("MSG!!", msg);
-					  dos.write(msg.getBytes());
-				  } while (mShell.fromServer.ready());
-				  //ServerSocketTest.text.setText((CharSequence) mMsg);  
-              } catch(IOException ioException){
-      			ioException.printStackTrace();
-              } finally {
-              }
-            //}
-        } catch (Exception e) {
-			e.printStackTrace();
-        }
-    }*/
+   
 }

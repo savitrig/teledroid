@@ -37,7 +37,8 @@ public class AndroidFileBrowser extends ListActivity {
 
     private final DISPLAYMODE displayMode = DISPLAYMODE.RELATIVE;
     private List<IconifiedText> directoryEntries = new ArrayList<IconifiedText>();
-    private File currentDirectory = new File("/");
+    public final static File rootDirectory = new File("/sdcard/");
+    private File currentDirectory = rootDirectory;
 
     private static final int START_SERVER_ID = Menu.FIRST;
     private static final int STOP_SERVER_ID = Menu.FIRST+1;
@@ -56,6 +57,7 @@ public class AndroidFileBrowser extends ListActivity {
         BackgroundService.ssh = new Connection("teledroid", "Lmssf6R6", "teledroid.rictic.com", 22);
         try {
 			BackgroundService.ssh.connect();
+			Log.v("teledroid.AndroidFileBrowser", "connected successfully");
 		} catch (JSchException e) {
 			Log.e("teledroid.AndroidFileBrowser", "unable to connect");
 			e.printStackTrace();
@@ -105,7 +107,7 @@ public class AndroidFileBrowser extends ListActivity {
      * root-directory of the file-system.
      */
     private void browseToRoot() {
-        browseTo(new File("/sdcard/"));
+        browseTo(rootDirectory);
     }
 
     /**

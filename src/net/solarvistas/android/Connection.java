@@ -66,6 +66,7 @@ public class Connection {
 		Channel channel = newShell();
 		channel.getOutputStream().write(command.getBytes());
 		channel.getOutputStream().flush();
+		Log.d("teledroid.Connection.Exec", "sent command `" + command + "` to server");
 		return channel;
 	}
 
@@ -252,12 +253,10 @@ public class Connection {
 				return false;
 			}
 			out.close();
-		} catch (JSchException e) {
-			Log.d("teledroid", "JSchException", e);
-		} catch (IOException e) {
-			Log.d("teledroid", "JSchException", e);
+		} catch (Exception e) {
+			Log.e("teledroid.Connection.SCPTo", "Exception sending " + lfile + " to " + rfile, e);
 		}
-		Log.d("teledroid", "SCPTo " + lfile + " : " + rfile);
+		Log.d("teledroid.Connection.SCPTo", "Sent " + lfile + " to server file " + rfile);
 		return true;
 	}
 }

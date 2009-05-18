@@ -1,8 +1,5 @@
 package net.solarvistas.android;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -17,7 +14,6 @@ public class BackgroundService extends Service {
     private NotificationManager mNM;
     public static Thread scanFilesThread = null; //bcast thread
     public static Thread fileMonitorThread = null; //bcast thread
-	public Map<String, Object> mFilesMap = new LinkedHashMap<String, Object>();
     public static Connection ssh;
 
     /** Called when the activity is first created. */
