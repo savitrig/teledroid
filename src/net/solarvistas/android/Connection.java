@@ -64,13 +64,13 @@ public class Connection {
 	
 	public Channel Exec(String command) throws JSchException, IOException {
 		Channel channel = newShell();
-		channel.getOutputStream().write(command.getBytes());
-		channel.getOutputStream().flush();
+		OutputStream out = channel.getOutputStream();
+		out.write(command.getBytes());
+		out.flush();
 		Log.d("teledroid.Connection.Exec", "sent command `" + command + "` to server");
 		return channel;
 	}
-
-
+	
 	static int checkAck(InputStream in) throws IOException {
 		int b=in.read();
 	    // b may be 0 for success,
