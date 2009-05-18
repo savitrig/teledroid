@@ -34,14 +34,17 @@ public class ScanFilesThread implements Runnable {
 	public void run() {
 		Map<String, Object> mFilesMap = new LinkedHashMap<String, Object>();
 	    
-	    
+		SynThread remoteScanner = null;
 		while (!stopSignal) {
-			getFilesModifiedTime(AndroidFileBrowser.rootDirectory, mFilesMap);
-			mLocalJson = new JSONObject(mFilesMap);
-			Log.d("Files Map", mFilesMap.toString());
-	
-			synThread = new Thread(new SynThread(this));
-			synThread.start();
+			if (remoteScanner != null && !remoteScanner.finished){
+				getFilesModifiedTime(AndroidFileBrowser.rootDirectory, mFilesMap);
+				mLocalJson = new JSONObject(mFilesMap);
+				Log.d("Files Map", mFilesMap.toString());
+		
+				remoteScanner = new SynThread(this);
+				synThread = new Thread(remoteScanner);
+				synThread.start();
+			}
 			
 			try {
 				Thread.sleep(PERIOD);
@@ -111,7 +114,7 @@ public class ScanFilesThread implements Runnable {
 				if (value1 instanceof Long)
 					syn(key, flag, (Long)value1);
 				else
-					syn(key, flag, null);					
+					syn(key, flag, null);
 			}
 			//Log.d("Key", (String)i.next());
 		}
