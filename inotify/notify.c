@@ -14,6 +14,7 @@
 
 int res = 0;
 int event_pos = 0;
+int	event_mask = 0;
 char event_buf[512];
 struct inotify_event *event;
 
@@ -35,7 +36,7 @@ JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_registerFile
 	return wd;
 }
 
-JNIEXPORT jlong JNICALL Java_net_solarvistas_android_Notify_nextEvent
+JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_nextEvent
   (JNIEnv *env, jclass clazz){
 	if(res < (int)sizeof(*event)){
 		LOGD("ERROR: event buffer overflow");
@@ -43,14 +44,20 @@ JNIEXPORT jlong JNICALL Java_net_solarvistas_android_Notify_nextEvent
 	}
 
 	int event_size;
-	long event_long;
 	event = (struct inotify_event *)(event_buf + event_pos);		
-	event_long = event->wd * 0x100000000 + event->mask;
+	event_mask = event->mask;
 	event_size = sizeof(*event) + event->len;
 	res -= event_size;
 	event_pos += event_size;
+	return event->wd;
 }
 
+JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_eventMask
+  (JNIEnv *env, jclass clazz){
+	int mask = event_mask;
+	event_mask = 0;
+	return event_mask;
+}
 JNIEXPORT jboolean JNICALL Java_net_solarvistas_android_Notify_hasNext
   (JNIEnv *env, jclass clazz, jint nfd){
 	if(res >= (int)sizeof(*event))
@@ -70,21 +77,23 @@ static JNINativeMethod sMethods[] = {
 	{"initNotify", "()I", (void*)Java_net_solarvistas_android_Notify_initNotify}, 
 	{"registerFile", "(ILjava/lang/String;I)I", (void*)Java_net_solarvistas_android_Notify_registerFile}, 
 	{"hasNext", "(I)Z", (void*)Java_net_solarvistas_android_Notify_hasNext}, 
-	{"nextEvent","()J", (void*)Java_net_solarvistas_android_Notify_nextEvent}, 
+	{"nextEvent","()I", (void*)Java_net_solarvistas_android_Notify_nextEvent}, 
+	{"eventMask","()I", (void*)Java_net_solarvistas_android_Notify_eventMask}, 
 };
 
 //extern "C" 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
-    JNIEnv* env = NULL;
+ /*   JNIEnv* env = NULL;
     jint result = -1;
-	``
+	
     if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
         return result;
     }
 
     jniRegisterNativeMethods(env, "net/solarvistas/android/Notify", sMethods, 1);
-    return JNI_VERSION_1_4;
+*/    
+	return JNI_VERSION_1_4;
 }
 
 int jniRegisterNativeMethods(JNIEnv* env, const char* className,
