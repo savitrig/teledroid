@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.Toast;
 
 public class BackgroundService extends Service {
@@ -19,6 +20,7 @@ public class BackgroundService extends Service {
     /** Called when the activity is first created. */
     @Override
     public void onCreate() {
+    	
         mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 
         // Display a notification about us starting.  We put an icon in the status bar.
@@ -28,6 +30,7 @@ public class BackgroundService extends Service {
         ScanFilesThread.stopSignal = false;
 		scanFilesThread = new Thread(new ScanFilesThread());
 		scanFilesThread.start();
+		Log.d("teledroid.BackgroundService", "synchronization service started");
     }
     
 	@Override
@@ -39,6 +42,7 @@ public class BackgroundService extends Service {
 		// Tell the user we stopped.
 		Toast.makeText(this, R.string.local_service_stopped,
 						Toast.LENGTH_SHORT).show();
+		Log.d("teledroid.BackgroundService", "synchronization service stopped");
 	}
 
 	@Override

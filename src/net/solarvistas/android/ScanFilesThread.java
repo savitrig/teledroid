@@ -1,6 +1,8 @@
 package net.solarvistas.android;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -17,7 +19,6 @@ import android.util.Log;
 import com.jcraft.jsch.Channel;
 
 public class ScanFilesThread implements Runnable {
-    public static Thread synThread = null; //bcast thread
     private static final int PERIOD   = 5 * 1000;
     private static final int TIMEDIFF = 1 * 1000;
     public static boolean stopSignal = false;
@@ -29,19 +30,12 @@ public class ScanFilesThread implements Runnable {
     //Connection mShell = null;
 
 	public void run() {
-		Map<String, Object> mFilesMap = new LinkedHashMap<String, Object>();
-	    
-		SynThread remoteScanner = null;
 		while (!stopSignal) {
-			if (remoteScanner == null || remoteScanner.finished){
-				getFilesModifiedTime(AndroidFileBrowser.rootDirectory, mFilesMap);
-				mLocalJson = new JSONObject(mFilesMap);
-				Log.d("Files Map", mFilesMap.toString());
-		
-				remoteScanner = new SynThread(this);
-				synThread = new Thread(remoteScanner);
-				synThread.start();
-			}
+			mLocalJson = new JSONObject(getFilesModifiedTime(AndroidFileBrowser.rootDirectory));
+//				Log.d("Files Map", mFilesMap.toString());
+			mServerJson = remoteDirscan("sdcard");
+			autoSyn(mServerJson, mLocalJson, Flag.ServerToClient);
+			autoSyn(mLocalJson, mServerJson, Flag.ClientToServer);
 			
 			try {
 				Thread.sleep(PERIOD);
@@ -49,47 +43,50 @@ public class ScanFilesThread implements Runnable {
 		}
 	}
 	
-	private void getFilesModifiedTime(File dir, Map<String, Object> m) {
-		if (dir.isDirectory()) {
-			for (File currentFile : dir.listFiles()) {
-				if (currentFile.isFile())
-					m.put(currentFile.getAbsolutePath().substring(1), currentFile.lastModified());
-				else {
-					Map<String, Object> dirMap = new LinkedHashMap<String, Object>();
-					getFilesModifiedTime(currentFile.getAbsoluteFile(), dirMap);
-					m.put(currentFile.getAbsolutePath().substring(1), dirMap);
-				}	
-			}
+	
+	private Map<String, Object> getFilesModifiedTime(File dir) {
+		if (!dir.isDirectory()) {
+			Log.e("teledroid", "getFilesModifiedTime was passed a file that isn't a directory: " + dir.getAbsolutePath());
+			return null;
 		}
-		else
-			System.err.println(dir.getAbsolutePath().substring(1)+" is not a directory.");
+		Map<String, Object> m = new LinkedHashMap<String, Object>(); 
+		
+		for (File currentFile : dir.listFiles()) {
+			if (currentFile.isFile())
+				m.put(currentFile.getAbsolutePath().substring(1), currentFile.lastModified());
+			else {
+				Map<String, Object> dirMap = getFilesModifiedTime(currentFile.getAbsoluteFile());
+				m.put(currentFile.getAbsolutePath().substring(1), dirMap);
+			}	
+		}
+		return m;
 	}
 	
-    public static final int BUMP_MSG = 0x101;
-
-    public Handler getServerInfoHandler = new Handler() {
-        @Override public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case BUMP_MSG:
-                	try {
-                		mServerJson = new JSONObject((String)msg.obj);
-					} catch (JSONException e) {
-						e.printStackTrace();
-						return;
-					}
-					for (Iterator<String> i = mServerJson.keys(); i.hasNext();) {
-						Log.d("Key", i.next());
-					}
-					autoSyn(mServerJson, mLocalJson, Flag.ServerToClient);
-					autoSyn(mLocalJson, mServerJson, Flag.ClientToServer);
-                	//Log.d("Server", (String)msg.obj);
-                    break;
-                default:
-                    super.handleMessage(msg);
-            }
-        }
-    };
+	private JSONObject remoteDirscan(String dirname) {
+		try {
+			Channel channel = BackgroundService.ssh.Exec("dir-print " + dirname + "\n");
+			BufferedReader input = new BufferedReader(new InputStreamReader(channel
+					.getInputStream()));
+			String msg = null;
+	    	while (true) {
+	    		msg = input.readLine();
+			
+	    		//skip the echoed line of the command ran
+				if (msg.contains("{")){
+					channel.disconnect();
+					break;
+				}
+	    	}
+	    	return new JSONObject(msg);
+		} catch (Exception e) {
+			Log.e("teledroid.SynThread.run", "Error getting dir-print info from server");
+			e.printStackTrace();
+		}
+		return null;
+	}
     
+	public static final int BUMP_MSG = 0x101;
+
     private void autoSyn(JSONObject o1, JSONObject o2, Flag flag) {    	
     	for (Iterator<String> i = o1.keys(); i.hasNext();) {
 			String key = i.next();
