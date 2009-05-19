@@ -17,45 +17,6 @@ int event_pos = 0;
 char event_buf[512];
 struct inotify_event *event;
 
-static JNINativeMethod sMethods[] = {
-     /* name, signature, funcPtr */
-	{"initNotify", "()I", (void*)Java_net_solarvistas_android_Notify_initNotify}, 
-	{"registerFile", "(ILjava/lang/String;I)I", (void*)Java_net_solarvistas_android_Notify_registerFile}, 
-	{"hasNext", "(I)Z", (void*)Java_net_solarvistas_android_Notify_hasNext}, 
-	{"nextEvent","()J", (void*)Java_net_solarvistas_android_Notify_nextEvent}, 
-};
-
-extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved)
-{
-    JNIEnv* env = NULL;
-    jint result = -1;
-
-    if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-        return result;
-    }
-
-    jniRegisterNativeMethods(env, "net/solarvistas/android/Notify", sMethods, 1);
-    return JNI_VERSION_1_4;
-}
-
-int jniRegisterNativeMethods(JNIEnv* env, const char* className,
-    const JNINativeMethod* gMethods, int numMethods)
-{
-    jclass clazz;
-
-    LOGV("Registering %s natives\n", className);
-    clazz = (*env)->FindClass(env, className);
-    if (clazz == NULL) {
-        LOGD("Native registration unable to find class '%s'\n", className);
-        return -1;
-    }
-    if ((*env)->RegisterNatives(env, clazz, gMethods, numMethods) < 0) {
-        LOGD("RegisterNatives failed for '%s'\n", className);
-        return -1;
-    }
-    return 0;
-}
-
 JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_initNotify
   (JNIEnv *env, jclass clazz){
 	return inotify_init();
@@ -102,4 +63,43 @@ JNIEXPORT jboolean JNICALL Java_net_solarvistas_android_Notify_hasNext
 		return JNI_FALSE;
     }
 	return JNI_TRUE;
+}
+
+static JNINativeMethod sMethods[] = {
+     /* name, signature, funcPtr */
+	{"initNotify", "()I", (void*)Java_net_solarvistas_android_Notify_initNotify}, 
+	{"registerFile", "(ILjava/lang/String;I)I", (void*)Java_net_solarvistas_android_Notify_registerFile}, 
+	{"hasNext", "(I)Z", (void*)Java_net_solarvistas_android_Notify_hasNext}, 
+	{"nextEvent","()J", (void*)Java_net_solarvistas_android_Notify_nextEvent}, 
+};
+
+extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved)
+{
+    JNIEnv* env = NULL;
+    jint result = -1;
+
+    if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
+        return result;
+    }
+
+    jniRegisterNativeMethods(env, "net/solarvistas/android/Notify", sMethods, 1);
+    return JNI_VERSION_1_4;
+}
+
+int jniRegisterNativeMethods(JNIEnv* env, const char* className,
+    const JNINativeMethod* gMethods, int numMethods)
+{
+    jclass clazz;
+
+    LOGV("Registering %s natives\n", className);
+    clazz = (*env)->FindClass(env, className);
+    if (clazz == NULL) {
+        LOGD("Native registration unable to find class '%s'\n", className);
+        return -1;
+    }
+    if ((*env)->RegisterNatives(env, clazz, gMethods, numMethods) < 0) {
+        LOGD("RegisterNatives failed for '%s'\n", className);
+        return -1;
+    }
+    return 0;
 }
