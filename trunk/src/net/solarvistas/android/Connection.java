@@ -99,6 +99,7 @@ public class Connection {
 	}
 
 	public boolean SCPFrom(String rfile, String lfile) {
+		Log.d("teledroid.Connection.SCPFrom", "Receiving " + lfile + " from server file " + rfile);
 		FileOutputStream fos = null;
 		try {
 			String prefix = null;
@@ -199,11 +200,12 @@ public class Connection {
 			} catch (Exception ee) {
 			}
 		}
-		Log.d("teledroid", "SCPFrom " + rfile + " : " + lfile);
+		Log.d("teledroid.Connection.SCPFrom", "Received " + lfile + " from server file " + rfile);
 		return true;
 	}
 
 	public boolean SCPTo(String lfile, String rfile) {
+		Log.d("teledroid.Connection.SCPTo", "Sending " + lfile + " to server file " + rfile);
 		FileInputStream fis;
 		try {
 			String command = "scp -p -t " + rfile;

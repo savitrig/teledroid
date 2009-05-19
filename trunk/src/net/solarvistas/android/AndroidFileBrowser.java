@@ -87,9 +87,11 @@ public class AndroidFileBrowser extends ListActivity {
     
         switch (item.getItemId()) {
         case START_SERVER_ID:
+        	Log.i("teledroid","starting synchronization service");
         	startService(new Intent(AndroidFileBrowser.this, BackgroundService.class));
             return true;
 	    case STOP_SERVER_ID:
+	    	Log.i("teledroid","stopping synchronization service");
 	    	stopService(new Intent(AndroidFileBrowser.this, BackgroundService.class));
 	        return true;
         }
