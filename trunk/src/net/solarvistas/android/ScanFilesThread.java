@@ -2,18 +2,19 @@ package net.solarvistas.android;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Stack;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import com.jcraft.jsch.Channel;
@@ -22,20 +23,36 @@ public class ScanFilesThread implements Runnable {
     private static final int PERIOD   = 5 * 1000;
     private static final int TIMEDIFF = 1 * 1000;
     public static boolean stopSignal = false;
-    private JSONObject mServerJson;
-    private JSONObject mLocalJson;
-    /*Flag 0: Server to Local; Flag 1: Local to Server; */
-    public enum Flag { ServerToClient, ClientToServer }
+    public enum Direction { ServerToClient, ClientToServer }
     
-    //Connection mShell = null;
-
 	public void run() {
+	    Map<String,ModificationInfo> serverInfo;
+	    Map<String,ModificationInfo> localInfo;
+		final String remoteDir = "sdcard";
+		Channel remoteChangeStream = null;
+		serverInfo = null;
+		
 		while (!stopSignal) {
-			mLocalJson = new JSONObject(getFilesModifiedTime(AndroidFileBrowser.rootDirectory));
+			localInfo = localDirscan(AndroidFileBrowser.rootDirectory);
+			if (localInfo == null) return;
+			
 //				Log.d("Files Map", mFilesMap.toString());
-			mServerJson = remoteDirscan("sdcard");
-			autoSyn(mServerJson, mLocalJson, Flag.ServerToClient);
-			autoSyn(mLocalJson, mServerJson, Flag.ClientToServer);
+			if (serverInfo == null) {
+				serverInfo = remoteDirscan(remoteDir);
+				try {
+					remoteChangeStream = BackgroundService.ssh.Exec("pull-sync " + remoteDir + "\n");
+				} catch (Exception e) {
+					Log.e("teledroid", "Unable to open pull-sync connection to server");
+					e.printStackTrace();
+				}
+			}
+			else {
+				serverInfo = remoteDirscan(remoteDir);
+//				serverInfo = getRemoteChanges(remoteChangeStream);
+			}
+			autoSyn(serverInfo, localInfo, Direction.ServerToClient);
+			autoSyn(localInfo, serverInfo, Direction.ClientToServer);
+
 			
 			try {
 				Thread.sleep(PERIOD);
@@ -44,90 +61,112 @@ public class ScanFilesThread implements Runnable {
 	}
 	
 	
-	private Map<String, Object> getFilesModifiedTime(File dir) {
+	private Map<String,ModificationInfo> getRemoteChanges(Channel remoteChangeStream) {
+		Log.v("teledroid","Fetching changes");
+		try {
+			OutputStream out = remoteChangeStream.getOutputStream();
+			out.write("\n".getBytes()); out.flush();
+			return fetchJSON(remoteChangeStream);
+		} catch (Exception e) {
+			Log.e("teledroid", "Error getting changes from server");
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+
+
+	private Map<String, ModificationInfo> localDirscan(final File dir) {
 		if (!dir.isDirectory()) {
 			Log.e("teledroid", "getFilesModifiedTime was passed a file that isn't a directory: " + dir.getAbsolutePath());
 			return null;
 		}
-		Map<String, Object> m = new LinkedHashMap<String, Object>(); 
-		
-		for (File currentFile : dir.listFiles()) {
-			if (currentFile.isFile())
-				m.put(currentFile.getAbsolutePath().substring(1), currentFile.lastModified());
-			else {
-				Map<String, Object> dirMap = getFilesModifiedTime(currentFile.getAbsoluteFile());
-				m.put(currentFile.getAbsolutePath().substring(1), dirMap);
-			}	
+		final Map<String, ModificationInfo> m = new LinkedHashMap<String, ModificationInfo>(); 
+		Stack<File> dirStack = new Stack<File>();
+		dirStack.add(dir);
+		while(!dirStack.empty()){
+			final File currentDir = dirStack.pop();
+			for (File currentFile : currentDir.listFiles()) {
+				if (currentFile.isDirectory())
+					dirStack.push(currentFile);
+				else
+					m.put(currentFile.getAbsolutePath().substring(1), new ModificationInfo(currentFile.lastModified()));
+			}
 		}
+		
 		return m;
 	}
 	
-	private JSONObject remoteDirscan(String dirname) {
+	private Map<String,ModificationInfo> remoteDirscan(String dirname) {
+		Log.v("teledroid","Running remote dirscan");
 		try {
-			Channel channel = BackgroundService.ssh.Exec("dir-print " + dirname + "\n");
-			BufferedReader input = new BufferedReader(new InputStreamReader(channel
-					.getInputStream()));
-			String msg = null;
-	    	while (true) {
-	    		msg = input.readLine();
-			
-	    		//skip the echoed line of the command ran
-				if (msg.contains("{")){
-					channel.disconnect();
-					break;
-				}
-	    	}
-	    	return new JSONObject(msg);
+			return fetchJSON(BackgroundService.ssh.Exec("dir-print " + dirname + "\n"));
 		} catch (Exception e) {
 			Log.e("teledroid.SynThread.run", "Error getting dir-print info from server");
 			e.printStackTrace();
 		}
 		return null;
 	}
+
+
+	@SuppressWarnings("unchecked")
+	private Map<String,ModificationInfo> fetchJSON(Channel channel) throws IOException, JSONException {
+		BufferedReader input = new BufferedReader(new InputStreamReader(channel
+								   .getInputStream()));
+		String msg = null;
+		while (true) {
+			msg = input.readLine();
+		
+			//skip the echoed line of the command ran
+			if (msg.contains("{")){
+				channel.disconnect();
+				break;
+			}
+		}
+		JSONObject jsonMap = new JSONObject(msg);
+		Map<String,ModificationInfo> result = new LinkedHashMap<String,ModificationInfo>(jsonMap.length());
+		for (Iterator i = jsonMap.keys(); i.hasNext();) {
+			String key = (String)i.next();
+			Long value = jsonMap.optLong(key);
+			if (value == null){
+				//TODO: handle deleted files
+				Log.e("teledroid", "unable to handle value: " + jsonMap.opt(key));
+				continue;
+			}
+			
+			result.put(key, new ModificationInfo(value));
+		}
+		return result;
+	}
     
 	public static final int BUMP_MSG = 0x101;
 
-    private void autoSyn(JSONObject o1, JSONObject o2, Flag flag) {    	
-    	for (Iterator<String> i = o1.keys(); i.hasNext();) {
-			String key = i.next();
-			Object value1 = null;
-			try {
-				value1 = o1.get(key);
-			} catch (JSONException e1) {
-				e1.printStackTrace();
+    private void autoSyn(Map<String,ModificationInfo> o1, Map<String,ModificationInfo> o2, Direction director) {    	
+    	for (String key : o1.keySet()) {
+			ModificationInfo value1 = o1.get(key);
+			if (!o2.containsKey(key)){
+				syn(key, director, value1.mtime);
+				continue;
 			}
-			try {
-				Object value2 = o2.get(key);
-				if (value1 instanceof Long && value2 instanceof Long)
-					compareAndSyn(key, (Long)value1, (Long)value2, flag, (Long)value1);	
-				else if (value1 instanceof JSONObject && value2 instanceof JSONObject)
-					autoSyn((JSONObject)value1, (JSONObject)value2, flag);
-				//TODO: else for one side Long, one side JSONObject;
-			}
-			catch (JSONException e) {
-				if (value1 instanceof Long)
-					syn(key, flag, (Long)value1);
-				else
-					syn(key, flag, null);
-			}
-			//Log.d("Key", (String)i.next());
+			
+			ModificationInfo value2 = o2.get(key);
+			compareAndSyn(key, value1.mtime, value2.mtime, director);	
 		}
     }
     
-    private void compareAndSyn(String key, Long v1, Long v2, Flag flag, Long value) {
+    private void compareAndSyn(String key, Long v1, Long v2, Direction flag) {
     	if (v1 - v2 > TIMEDIFF) {
 	    	Log.d("Test", Long.toString(v1 - v2));
-    		syn (key, flag, value);
-    	
+	    	syn (key, flag, v1);
     	}
     }
     
-    private void syn(String fileName, Flag flag, Long value) {
+    private void syn(String fileName, Direction flag, Long value) {
     	String parentPath = "/home/teledroid/";
     	
     	switch (flag) {
     	case ServerToClient:
-    		Log.d("teledroid","transferring " + fileName + " from server");
+//    		Log.d("teledroid","transferring " + fileName + " from server");
     		if (value != null) {
 	    		BackgroundService.ssh.SCPFrom(parentPath+fileName, fileName);
 	    		File f = new File(fileName);
