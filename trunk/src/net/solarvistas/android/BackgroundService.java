@@ -26,7 +26,7 @@ public class BackgroundService extends Service {
         //fileMonitorThread = new Thread(new FileMonitorThread(this));
         //fileMonitorThread.start();
         ScanFilesThread.stopSignal = false;
-		scanFilesThread = new Thread(new ScanFilesThread(this));
+		scanFilesThread = new Thread(new ScanFilesThread());
 		scanFilesThread.start();
     }
     
