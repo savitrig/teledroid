@@ -141,55 +141,47 @@ public class ScanFilesThread implements Runnable {
     
 	public static final int BUMP_MSG = 0x101;
 
-    private void autoSyn(Map<String,ModificationInfo> o1, Map<String,ModificationInfo> o2, Direction director) {    	
-    	for (String key : o1.keySet()) {
-			ModificationInfo value1 = o1.get(key);
-			if (!o2.containsKey(key)){
-				syn(key, director, value1.mtime);
+    private void autoSyn(Map<String,ModificationInfo> o1, Map<String,ModificationInfo> o2, Direction direction) {    	
+    	for (String filename : o1.keySet()) {
+			ModificationInfo value1 = o1.get(filename);
+			if (!o2.containsKey(filename)){
+				syn(filename, direction, value1.mtime);
 				continue;
 			}
 			
-			ModificationInfo value2 = o2.get(key);
-			compareAndSyn(key, value1.mtime, value2.mtime, director);	
+			ModificationInfo value2 = o2.get(filename);
+			compareAndSyn(filename, value1.mtime, value2.mtime, direction);	
 		}
     }
     
-    private void compareAndSyn(String key, Long v1, Long v2, Direction flag) {
-    	if (v1 - v2 > TIMEDIFF) {
-	    	Log.d("Test", Long.toString(v1 - v2));
-	    	syn (key, flag, v1);
+    private void compareAndSyn(String filename, Long mtime1, Long mtime2, Direction direction) {
+    	if (mtime1 - mtime2 > TIMEDIFF) {
+	    	Log.d("Test", Long.toString(mtime1 - mtime2));
+	    	syn (filename, direction, mtime1);
     	}
     }
     
-    private void syn(String fileName, Direction flag, Long value) {
+    private void syn(String fileName, Direction direction, Long canonicalModifiedTime) {
     	String parentPath = "/home/teledroid/";
     	
-    	switch (flag) {
+    	switch (direction) {
     	case ServerToClient:
 //    		Log.d("teledroid","transferring " + fileName + " from server");
-    		if (value != null) {
+    		if (canonicalModifiedTime != null) {
 	    		BackgroundService.ssh.SCPFrom(parentPath+fileName, fileName);
 	    		File f = new File(fileName);
-	    		f.setLastModified(value);
+	    		f.setLastModified(canonicalModifiedTime);
     		}
     		break;
     	case ClientToServer:
     		BackgroundService.ssh.SCPTo(fileName, parentPath+fileName);
     	    String pattern = "yyyyMMddHHmm.ss";
     	    SimpleDateFormat format = new SimpleDateFormat(pattern);
-			String formatDate = format.format((new Date(value)));
-	    	Log.d("TestTime", formatDate);
+			String formatDate = format.format((new Date(canonicalModifiedTime)));
 
-    		try {
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-    		Connection con = BackgroundService.ssh;
     		Channel execChannel = null;
     		try {
-				execChannel = con.Exec("touch -t "+formatDate+" "+parentPath+fileName+"\n");
+				execChannel = BackgroundService.ssh.Exec("touch -t "+formatDate+" "+parentPath+fileName+"\n");
 			} catch (Exception e) {
 				Log.e("teledroid.ScanFilesThread.syn", "unable to touch file " + parentPath+fileName);
 				e.printStackTrace();
