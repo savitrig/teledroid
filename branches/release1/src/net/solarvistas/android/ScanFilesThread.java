@@ -1,7 +1,6 @@
 package net.solarvistas.android;
 
 import java.io.File;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -14,6 +13,8 @@ import org.json.JSONObject;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+
+import com.jcraft.jsch.Channel;
 
 public class ScanFilesThread implements Runnable {
 	Map<String, Object> mFilesMap;
@@ -162,9 +163,9 @@ public class ScanFilesThread implements Runnable {
 					e.printStackTrace();
 				}
     		Connection mShell = BackgroundService.ssh;
-    		mShell.channelSetup();
-            mShell.Exec("touch -t "+formatDate+" "+parentPath+fileName+"\n");
-            mShell.channel.disconnect();
+    		//mShell.channelSetup();
+            Channel c = mShell.Exec("touch -t "+formatDate+" "+parentPath+fileName+"\n");
+            c.disconnect();
     		break;
     	default:break;
     	}
