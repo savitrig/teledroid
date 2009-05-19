@@ -16,7 +16,6 @@ int res = 0;
 int event_pos = 0;
 char event_buf[512];
 struct inotify_event *event;
-static const char *classPathName = "net/solarvistas/android/Notify";
 
 JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_initNotify
   (JNIEnv *env, jclass clazz){
@@ -74,76 +73,34 @@ static JNINativeMethod sMethods[] = {
 	{"nextEvent","()J", (void*)Java_net_solarvistas_android_Notify_nextEvent}, 
 };
 
-/*
- * Register several native methods for one class.
- */
-static int registerNativeMethods(JNIEnv* env, const char* className,
-    JNINativeMethod* gMethods, int numMethods)
+//extern "C" 
+jint JNI_OnLoad(JavaVM* vm, void* reserved)
+{
+    JNIEnv* env = NULL;
+    jint result = -1;
+	``
+    if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
+        return result;
+    }
+
+    jniRegisterNativeMethods(env, "net/solarvistas/android/Notify", sMethods, 1);
+    return JNI_VERSION_1_4;
+}
+
+int jniRegisterNativeMethods(JNIEnv* env, const char* className,
+    const JNINativeMethod* gMethods, int numMethods)
 {
     jclass clazz;
 
-    clazz = env->FindClass(className);
+    LOGV("Registering %s natives\n", className);
+    clazz = (*env)->FindClass(env, className);
     if (clazz == NULL) {
-        LOGE("Native registration unable to find class '%s'", className);
-        return JNI_FALSE;
+        LOGD("Native registration unable to find class '%s'\n", className);
+        return -1;
     }
-    if (env->RegisterNatives(clazz, gMethods, numMethods) < 0) {
-        LOGE("RegisterNatives failed for '%s'", className);
-        return JNI_FALSE;
+    if ((*env)->RegisterNatives(env, clazz, gMethods, numMethods) < 0) {
+        LOGD("RegisterNatives failed for '%s'\n", className);
+        return -1;
     }
-
-    return JNI_TRUE;
-}
-
-/*
- * Register native methods for all classes we know about.
- *
- * returns JNI_TRUE on success.
- */
-static int registerNatives(JNIEnv* env)
-{
-  if (!registerNativeMethods(env, classPathName,
-                 methods, sizeof(methods) / sizeof(methods[0]))) {
-    return JNI_FALSE;
-  }
-
-  return JNI_TRUE;
-}
-
-
-// ----------------------------------------------------------------------------
-
-/*
- * This is called by the VM when the shared library is first loaded.
- */
- 
-typedef union {
-    JNIEnv* env;
-    void* venv;
-} UnionJNIEnvToVoid;
-
-jint JNI_OnLoad(JavaVM* vm, void* reserved)
-{
-    UnionJNIEnvToVoid uenv;
-    uenv.venv = NULL;
-    jint result = -1;
-    JNIEnv* env = NULL;
-    
-    LOGI("JNI_OnLoad");
-
-    if (vm->GetEnv(&uenv.venv, JNI_VERSION_1_4) != JNI_OK) {
-        LOGE("ERROR: GetEnv failed");
-        goto bail;
-    }
-    env = uenv.env;
-
-    if (registerNatives(env) != JNI_TRUE) {
-        LOGE("ERROR: registerNatives failed");
-        goto bail;
-    }
-    
-    result = JNI_VERSION_1_4;
-    
-bail:
-    return result;
+    return 0;
 }
