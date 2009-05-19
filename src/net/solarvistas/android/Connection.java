@@ -140,7 +140,7 @@ public class Connection {
 					}
 					if (buf[0] == ' ')
 						break;
-					filesize = filesize * 10L + (long) (buf[0] - '0');
+					filesize = filesize * 10L + (buf[0] - '0');
 				}
 
 				String file = null;

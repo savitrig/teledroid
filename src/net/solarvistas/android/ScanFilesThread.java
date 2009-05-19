@@ -28,9 +28,6 @@ public class ScanFilesThread implements Runnable {
     
     //Connection mShell = null;
 
-    public ScanFilesThread(BackgroundService bs) {
-    }
-    
 	public void run() {
 		Map<String, Object> mFilesMap = new LinkedHashMap<String, Object>();
 	    
