@@ -3,8 +3,8 @@ ifneq ($(TARGET_SIMULATOR),true)
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES:= inotify.c
-LOCAL_MODULE := libinotifyjni
+LOCAL_SRC_FILES:= notify.c
+LOCAL_MODULE := libnotify
 LOCAL_C_INCLUDES += $(JNI_H_INCLUDE)
 LOCAL_STATIC_LIBRARIES :=
 LOCAL_SHARED_LIBRARIES := libutils
