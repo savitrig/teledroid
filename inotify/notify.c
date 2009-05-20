@@ -42,13 +42,13 @@ JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_registerFile
 JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_nextEvent
   (JNIEnv *env, jclass clazz){
 	if(res < (int)sizeof(*event)){
-		LOGD("ERROR: event buffer overflow");
+		LOGE("ERROR: event buffer overflow");
 		return -1;
 	}
 
 	int event_size;
 	event = (struct inotify_event *)(event_buf + event_pos);		
-	LOGD("Returning Event %d at pos: %d length: %d|\t(res=%d, pos=%d)", event->mask, event->wd, event->len, res, event_pos);
+	LOGV("Returning Event %d at pos: %d length: %d|\t(res=%d, pos=%d)", event->mask, event->wd, event->len, res, event_pos);
 	if (event->len)
 		strncpy (file_name, event->name, FILENAME_MAX - 1);
 	event_mask = event->mask;
@@ -122,11 +122,11 @@ int jniRegisterNativeMethods(JNIEnv* env, const char* className,
     LOGV("Registering %s natives\n", className);
     clazz = (*env)->FindClass(env, className);
     if (clazz == NULL) {
-        LOGD("Native registration unable to find class '%s'\n", className);
+        LOGE("Native registration unable to find class '%s'\n", className);
         return -1;
     }
     if ((*env)->RegisterNatives(env, clazz, gMethods, numMethods) < 0) {
-        LOGD("RegisterNatives failed for '%s'\n", className);
+        LOGE("RegisterNatives failed for '%s'\n", className);
         return -1;
     }
     return 0;
