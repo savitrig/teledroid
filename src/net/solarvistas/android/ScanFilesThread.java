@@ -64,11 +64,16 @@ public class ScanFilesThread implements Runnable {
 			
 			List<SyncAction> syncActions = getSynchronizationActions(serverInfo, localInfo);
 			
+			int successfulCount = 0;
 			if (syncActions.size() != 0) {
 				bs.beginSyncNotification(syncActions);
 				for (SyncAction action : syncActions){
-					if (stopSignal) return;
+					if (stopSignal){
+						bs.syncInterruptedNotification(successfulCount, syncActions.size()-successfulCount);
+						return;
+					}
 					sync(action);
+					successfulCount++;
 				}
 				bs.finishedSyncNotification(syncActions);
 			}

@@ -67,27 +67,40 @@ public class BackgroundService extends Service {
 	}
 
 	public void beginSyncNotification(List<SyncAction> syncActions) {
-		Notification notification = new Notification(R.drawable.uponelevel, "Syncing " + syncActions.size() + " files", System.currentTimeMillis());
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, AndroidFileBrowser.class), 0);
-		int sending = 0, receiving = 0;
-		for (SyncAction action : syncActions)
-			if (action.direction == ScanFilesThread.Direction.ClientToServer) sending++;
-			else receiving++;
-		notification.setLatestEventInfo(this, "Sync Started", "Sending " + sending + " files, receiving " + receiving + " files.", contentIntent);
-		mNM.notify(777, notification);
+		int[] counts = syncCounts(syncActions);
+		
+		syncNotification("Syncing " + syncActions.size() + " files",
+						 "Sync Started",
+						 "Sending: " + counts[0] + " files\nReceiving: " + counts[1] + " files.");
 	}
+
 	
 	public void finishedSyncNotification(List<SyncAction> syncActions) {
-		Notification notification = new Notification(R.drawable.uponelevel, "Finished syncing " + syncActions.size() + " files", System.currentTimeMillis());
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, AndroidFileBrowser.class), 0);
+		int[] counts = syncCounts(syncActions);
+		syncNotification("Finished syncing " + syncActions.size() + " files",
+						 "Sync Finished",
+						 "Sent: " + counts[0] + " files\nReceived: " + counts[1]+ " files");
+	}
+	
+	public void syncInterruptedNotification(int successful, int unsuccessful) {
+		syncNotification("Sync interrupted",
+						 "Sync interrupted",
+						 "Successful: " + successful + " files\n Remaining: " + unsuccessful + " files");
+	}
+	
+	private int[] syncCounts(List<SyncAction> syncActions) {
 		int sending = 0, receiving = 0;
 		for (SyncAction action : syncActions)
 			if (action.direction == ScanFilesThread.Direction.ClientToServer) sending++;
 			else receiving++;
-		notification.setLatestEventInfo(this, "Sync Finished", "Finished sending " + sending + " files, receiving " + receiving + " files.", contentIntent);
-		
+		return new int[] {sending, receiving};
+	}
+	
+	private void syncNotification(String toolbarText, String title, String fullText) {
+		Notification notification = new Notification(R.drawable.uponelevel, toolbarText, System.currentTimeMillis());
+		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+                new Intent(this, AndroidFileBrowser.class), 0);
+		notification.setLatestEventInfo(this, title, fullText, contentIntent);
 		mNM.notify(777, notification);
 	}
 	
