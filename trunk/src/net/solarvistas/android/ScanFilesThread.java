@@ -18,7 +18,6 @@ import org.json.JSONObject;
 
 import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.jcraft.jsch.Channel;
 
@@ -28,7 +27,7 @@ public class ScanFilesThread implements Runnable {
     public static boolean stopSignal = false;
     public enum Direction { ServerToClient, ClientToServer }
     private BackgroundService bs;
-    
+    private FileMonitorThread localMonitor;
     public ScanFilesThread(BackgroundService bs) {
     	this.bs = bs;
     }
@@ -39,7 +38,7 @@ public class ScanFilesThread implements Runnable {
 		final String remoteDir = "sdcard";
 		final File localDir  = AndroidFileBrowser.rootDirectory;
 		Channel remoteChangeStream = null;
-		FileMonitorThread localMonitor = new FileMonitorThread();
+		localMonitor = new FileMonitorThread();
 		new Thread(localMonitor).start();
 		
 		while (!stopSignal) {
@@ -55,12 +54,15 @@ public class ScanFilesThread implements Runnable {
 				}
 			}
 			else {
-				serverInfo = remoteDirscan(remoteDir);
-				localInfo  = localDirscan(localDir);
-//				localInfo  = localMonitor.getLatestChanges();
-//				serverInfo = getRemoteChanges(remoteChangeStream);
+				if(BackgroundService.mSyncMode == BackgroundService.SYNC_MODE_MONITOR){
+					localInfo  = localMonitor.getLatestChanges();
+					serverInfo = getRemoteChanges(remoteChangeStream);
+				}else {
+					serverInfo = remoteDirscan(remoteDir);
+					localInfo  = localDirscan(localDir);	
+				}
 			}
-			if ((localInfo == null) || (serverInfo == null)) return;
+			if (localInfo == null)  return;
 			
 			List<SyncAction> syncActions = getSynchronizationActions(serverInfo, localInfo);
 			
@@ -196,10 +198,11 @@ public class ScanFilesThread implements Runnable {
     	
     	switch (action.direction) {
     	case ServerToClient:
-//    		Log.d("teledroid","transferring " + fileName + " from server");
+    		Log.d("teledroid","transferring " + action.filename + " from server");
     		BackgroundService.ssh.SCPFrom(parentPath+action.filename, action.filename);
 	    	File f = new File(action.filename);
 	    	f.setLastModified(action.modificationInfo.mtime);
+	    	localMonitor.registerFile(action.filename);
     		break;
     	case ClientToServer:
     		BackgroundService.ssh.SCPTo(action.filename, parentPath+action.filename);
