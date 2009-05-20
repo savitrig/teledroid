@@ -1,0 +1,74 @@
+%
+% file: main.tex
+% date: 2003-01-10
+%   by: GDB
+% desc: Android Paper
+%
+
+\documentclass[11pt]{article}
+\usepackage{times}
+\usepackage{vmargin}
+\usepackage{epsfig}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{myfancybox}
+\usepackage{graphics}
+%\usepackage{vfile}
+\usepackage{subfigure}
+
+% use custom frame environments
+\input{frames.tex}
+
+\def\inotify{iNotify}
+
+% Some useful macros
+
+% Multiline comments
+\long\def\com#1{}
+
+% Document configuration
+
+% Margins
+\setpapersize{USletter}
+%\setmarginsrb{left}{top}{right}{bottom}
+%\setmarginsrb{1.0in}{1.0in}{1.0in}{1.0in}{0pt}{0mm}{0.25in}{7mm}
+\setmarginsrb{1.0in}{1.0in}{1.0in}{1.0in}{0pt}{0mm}{0.25in}{7mm}
+
+\begin{document}
+
+\centerline{\LARGE Sync ......}
+\vspace{0.05in}
+\centerline{\LARGE for android}
+\vspace{0.20in}
+\centerline{\large Peter Burns
+            \hspace{0.25in} Lihuan(Riku) Xie
+            \hspace{0.25in} Peter S. Pacheco}
+\vspace{0.20in}
+\centerline{Department of Computer Science}
+\centerline{University of San Francisco}
+\centerline{2130 Fulton Street, San Francisco, CA 94117-1080}
+\centerline{\{rictic, rikutse, xeno.zhang\}@gmail.com}
+%\vspace{0.20in}
+%\centerline{{\bf Full Paper}}
+\vspace{0.60in}
+
+
+\input{abstract}
+\pagebreak
+
+\input{introduction}
+\input{motivation}
+\input{implementation}
+\input{synchronization}
+\input{performance}
+\input{related}
+\input{conclusions}
+
+%\pagebreak
+
+\small
+\bibliographystyle{plain}
+\bibliography{android}
+\normalsize
+
+\end{document}
