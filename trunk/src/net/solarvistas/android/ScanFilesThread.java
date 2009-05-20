@@ -16,7 +16,6 @@ import java.util.Stack;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.os.Looper;
 import android.util.Log;
 
 import com.jcraft.jsch.Channel;
@@ -33,7 +32,11 @@ public class ScanFilesThread implements Runnable {
     }
     
 	public void run() {
-		Looper.prepare(); //for making toast notifications
+		go();
+		onFinished();
+	}
+	
+	public void go() {
 	    Map<String,ModificationInfo> serverInfo = null, localInfo = null;
 		final String remoteDir = "sdcard";
 		final File localDir  = AndroidFileBrowser.rootDirectory;
@@ -85,6 +88,9 @@ public class ScanFilesThread implements Runnable {
 				Thread.sleep(PERIOD);
 			} catch (InterruptedException e) {}
 		}
+	}
+	
+	private void onFinished() {
 		FileMonitorThread.stopSignal = true;
 	}
 	
