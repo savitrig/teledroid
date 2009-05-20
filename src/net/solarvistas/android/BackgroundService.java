@@ -19,6 +19,10 @@ public class BackgroundService extends Service {
     public static Thread fileMonitorThread = null; //bcast thread
     public static Connection ssh;
 
+    public final static int SYNC_MODE_SCAN = 1;
+    public final static int SYNC_MODE_MONITOR = 2;
+    public final static int SYNC_MODE_LAZY = 3;
+    public static int mSyncMode = SYNC_MODE_SCAN;
     /** Called when the activity is first created. */
     @Override
     public void onCreate() {
@@ -27,8 +31,7 @@ public class BackgroundService extends Service {
 
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
-        //fileMonitorThread = new Thread(new FileMonitorThread(this));
-        //fileMonitorThread.start();
+        
         ScanFilesThread.stopSignal = false;
 		scanFilesThread = new Thread(new ScanFilesThread(this));
 		scanFilesThread.start();

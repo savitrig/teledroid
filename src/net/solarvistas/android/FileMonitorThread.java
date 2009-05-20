@@ -1,111 +1,166 @@
 package net.solarvistas.android;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Stack;
 
+import net.solarvistas.android.AndroidFileBrowser;
+import net.solarvistas.android.ModificationInfo;
 import android.util.Log;
 
-
 public class FileMonitorThread implements Runnable {
-
-    //Map<String, Long> mFilesMap;
-    Process mPNotify;
-	int mRunningStatus;
-    String mTarget = "/sdcard/teledroid";
-    Map<String,ModificationInfo> mFileChanges = new LinkedHashMap<String,ModificationInfo>();
-	final String inotify = "/data/inotify ";//data/net.ssolarvistas.android/libs/";
-    final ArrayList<String> mask = new ArrayList<String>();
-
-    final int TD_FM_RUNNING = 1;
-    final int TD_FM_STOPED = 0;
-    final int TD_FM_TERMINATING = -1;
-    final int TD_FM_RESTARTING = 2;
-
-    public FileMonitorThread() {
-        InitiateMonitoredMaskList();
+    
+	private static final int PERIOD   = 5 * 1000;
+    private static final int TIMEDIFF = 1 * 1000;
+    public static boolean stopSignal = false;
+    public enum Direction { ServerToClient, ClientToServer }
+    private BackgroundService bs;
+    
+    private int mNFD;
+    
+    Map<String,ModificationInfo> mFileChanges;
+    Map<Integer,String>	mFileList = new LinkedHashMap<Integer, String>();
+    
+    public void run() {
+    	//final String remoteDir = "sdcard";
+    	mFileChanges = new LinkedHashMap<String, ModificationInfo>();
+    	try{
+    		mNFD = Notify.initNotify();
+    		Log.d("teledroid", "notify initiated, get nfd " + mNFD + ".");
+    	}catch(Exception e){
+    		Log.e("teledroid", "initNotify", e);
+    	}
+    	registerDir(AndroidFileBrowser.rootDirectory);
+    	while(!stopSignal){
+    		Log.d("teledroid", "Checking incoming event. Incoming? "+Notify.hasNext(mNFD));
+    		while(Notify.hasNext(mNFD)){
+    			interpEvent(Notify.nextEvent());
+    		}
+    		try {
+    			Thread.sleep(PERIOD);
+    		} catch (InterruptedException e) {}
+    	}
+    	Log.d("teledroid", "File monitor thread ended.");
     }
 
-    public void run() {
-    	try {
-    		String status;
-    		BufferedReader input = invokeNotify(mTarget);
-            mRunningStatus = TD_FM_RUNNING;
-    		while(true){
-				if ((status = input.readLine()) != null)
-                    if(status.startsWith("[i]"))
-                        ProcessINotifyEvent(status);
-
-                switch(mRunningStatus){
-                    case TD_FM_RUNNING:
-                        break;
-                    case TD_FM_RESTARTING:
-                        input = invokeNotify(mTarget);
-                        mRunningStatus = TD_FM_RUNNING;
-                        break;
-                    case TD_FM_TERMINATING:
-                        mPNotify.destroy();
-                        mRunningStatus = TD_FM_STOPED;
-                    default:
-                        throw new Exception("inotify process stoped.");
-                }
-    		}
-    	} catch (Exception e) {
-			Log.d("Teledroid.Monitor", "IOException", e);
+    private void registerDir(final File dir) {
+		if (!dir.isDirectory()) {
+			Log.e("teledroid", "registerDir was passed a file that isn't a directory: " +  
+					dir.getAbsolutePath());
+		}
+		Log.d("teledroid", "Registering directory " + dir.getAbsolutePath() + ".");
+		
+		Stack<File> dirStack = new Stack<File>();
+		dirStack.add(dir);
+		while(!dirStack.empty()){
+			final File currentDir = dirStack.pop();
+			//	Further implementation may watch directory, current file only.
+			//registerFile(currentFile.getAbsolutePath());
+			for (File currentFile : currentDir.listFiles()) {
+				if (currentFile.isDirectory())
+					dirStack.push(currentFile);
+				else
+					registerFile(currentFile.getAbsolutePath());
+			}
+		}
+	}
+    
+    private void registerFile(String file) {
+    	if( !mFileList.containsValue(file)){
+    		Integer wd = Notify.registerFile(mNFD, file, Notify.IN_ALL_EVENTS);
+    		if( wd > 0){
+    			Log.d("teledroid", "Registering file " + file + ".");
+    			mFileList.put(wd, file);
+    		}else
+    			Log.d("teledroid", "Unable to register file " + file + ".");
     	}
     }
-
-    private void InitiateMonitoredMaskList(){
-        mask.add("CREATE");
-        mask.add("CLOSE_WRITE");
-        mask.add("ATTRIB");
-        mask.add("DETELE");
-        mask.add("DELETE_SELF");
-        mask.add("MODIFY");
-        mask.add("MOVE_SELF");
-        mask.add("MOVED_FROM");
-        mask.add("MOVED_TO");
+    
+    private void interpEvent(int event){
+    	Log.d("teledroid", "Checking event " + event); 
+    	Integer fileNum = event;
+    	Object filename = mFileList.get(fileNum);
+    	if(filename != null){
+    		event = Notify.eventMask();
+    		Log.d("teledroid", "Adding event "+event+" for "+filename);
+    		if((event & Notify.NOTIFY_DELETE) == Notify.IN_DELETE_SELF || (event & Notify.NOTIFY_DELETE) == Notify.IN_MOVE_SELF)
+    			mFileChanges.put(filename.toString(), new ModificationInfo(
+        				(new File(filename.toString())).lastModified(), ModificationInfo.Kind.DELETED));
+    		else
+    			mFileChanges.put(filename.toString(), new ModificationInfo(
+    				(new File(filename.toString())).lastModified()));
+    	}	
     }
     
-    private void ProcessINotifyEvent(String input) {
-        String fileName= input.substring(3).split(", ")[0];
-        String event = input.substring(3).split(", ")[1];
-        if(mask.contains(event)) {
-            File file = new File(fileName);
-            if (!file.isDirectory()){
-            	ModificationInfo.Kind modificationKind = event.contains("DELETE") ? ModificationInfo.Kind.DELETED : ModificationInfo.Kind.MODIFIED;
-            	mFileChanges.put(fileName, new ModificationInfo(file.lastModified(), modificationKind));
-                Log.d("teledroid", "noticed " + file + " had event:" + event);
-            }
-        }
-        Log.d("teledroid", input);
-    }
-
-    public void setMRunningStatus(int mRunningStatus) {
-        this.mRunningStatus = mRunningStatus;
-    }
-
     public Map<String,ModificationInfo> getLatestChanges() {
-        Map<String,ModificationInfo> result = mFileChanges;
-        mFileChanges = new LinkedHashMap<String,ModificationInfo>();
+    	Map<String,ModificationInfo> result = mFileChanges;
+    	mFileChanges = new LinkedHashMap<String,ModificationInfo>();
     	return result;
     }
-
-    public int getMRunningStatus() {
-        return mRunningStatus;
-    }
-
-    private BufferedReader invokeNotify(String target) throws Exception {
-    	String command = inotify + target;
-		mPNotify = Runtime.getRuntime().exec(command);
-		Log.d("teledroid", ">> FileMonitor Initiated Process $" + command);
-		return new BufferedReader(new InputStreamReader(mPNotify.getInputStream()));
-    }
-
-    public void Terminate(){
-        setMRunningStatus(TD_FM_TERMINATING);
-    }
 }
+
+class Notify {
+	public final static int IN_ACCESS = 0x00000001;	/* File was accessed.  */
+    public final static int IN_MODIFY = 0x00000002;	/* File was modified.  */
+    public final static int IN_ATTRIB = 0x00000004;	/* Metadata changed.  */
+    public final static int IN_CLOSE_WRITE = 0x00000008;	/* Writtable file was closed.  */
+    public final static int IN_CLOSE_NOWRITE = 0x00000010;	/* Unwrittable file closed.  */
+    
+    public final static int IN_OPEN = 0x00000020;	/* File was opened.  */
+    public final static int IN_MOVED_FROM = 0x00000040;	/* File was moved from X.  */
+    public final static int IN_MOVED_TO = 0x00000080;	/* File was moved to Y.  */
+
+    public final static int IN_CREATE = 0x00000100;	/* Subfile was created.  */
+    public final static int IN_DELETE = 0x00000200;	/* Subfile was deleted.  */
+    public final static int IN_DELETE_SELF = 0x00000400;	/* Self was deleted.  */
+    public final static int IN_MOVE_SELF = 0x00000800;	/* Self was moved.  */
+
+    /* Events sent by the kernel.  */
+    public final static int IN_UNMOUNT = 0x00002000;	/* Backing fs was unmounted.  */
+    public final static int IN_Q_OVERFLOW = 0x00004000;	/* Event queued overflowed.  */
+    public final static int IN_IGNORED = 0x00008000;	/* File was ignored.  */
+
+    public final static int IN_CLOSE = (IN_CLOSE_WRITE | IN_CLOSE_NOWRITE);	/* Close.  */
+    public final static int IN_MOVE = (IN_MOVED_FROM | IN_MOVED_TO);		/* Moves.  */
+
+    /* Special flags.  */
+    public final static int IN_ONLYDIR = 0x01000000;	/* Only watch the path if it is a
+                                                           directory.  */
+    public final static int IN_DONT_FOLLOW = 0x02000000;	/* Do not follow a sym link.  */
+    public final static int IN_MASK_ADD = 0x20000000;	/* Add to the mask of an already
+                                                           existing watch.  */
+    public final static int IN_ISDIR = 0x40000000;	/* Event occurred against dir.  */
+    public final static int IN_ONESHOT = 0x80000000;	/* Only send event once.  */
+
+    /* All events which a program can wait on.  */
+    public final static int IN_ALL_EVENTS =	 (IN_ACCESS | IN_MODIFY | IN_ATTRIB | IN_CLOSE_WRITE 
+                                              | IN_CLOSE_NOWRITE | IN_OPEN | IN_MOVED_FROM 
+                                              | IN_MOVED_TO | IN_CREATE | IN_DELETE 
+                                              | IN_DELETE_SELF | IN_MOVE_SELF);
+    
+    public final static int NOTIFY_DELETE = (IN_DELETE_SELF | IN_MOVE_SELF);
+    public final static int NOTIFY_MONITOR =  (IN_ACCESS | IN_MODIFY | IN_ATTRIB | IN_CLOSE_WRITE 
+    											 | IN_DELETE_SELF | IN_MOVE_SELF);
+    
+    static {
+    	// The runtime will add "lib" on the front and ".o" on the end of
+    	// the name supplied to loadLibrary.
+    	//
+    	try{
+    		Log.d("teledroid", "Loading JNI Lib.");
+    		System.loadLibrary("notify");
+    	}catch (Throwable tr){
+    		Log.e("teledroid", "Can't load JNI", tr);
+    	}
+        
+    }
+    
+    public static native int initNotify();
+    public static native int registerFile(int nfd, String file, int mask);
+    public static native int nextEvent();
+    public static native int eventMask();
+    public static native boolean hasNext(int nfd);
+    
+}
+
