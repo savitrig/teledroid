@@ -42,7 +42,11 @@ public class AndroidFileBrowser extends ListActivity {
 
     private static final int START_SERVER_ID = Menu.FIRST;
     private static final int STOP_SERVER_ID = Menu.FIRST+1;
-    
+    private static final int MODE_SCAN_ID = Menu.FIRST+2;
+    private static final int MODE_MONITOR_ID = Menu.FIRST+3;
+    private static final int MODE_LAZY_ID = Menu.FIRST+4;
+    private static final int EXECUTE_ID = Menu.FIRST+5;
+
     private String type;
 
     /**
@@ -74,13 +78,17 @@ public class AndroidFileBrowser extends ListActivity {
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
     	boolean s = super.onCreateOptionsMenu(menu);
-    	MenuItem item = menu.add("Execute command");
-    	item.setIcon(R.drawable.test);
-    	menu.addSubMenu("pdflatex");
-    	menu.addSubMenu("make");
-        menu.add(0, START_SERVER_ID, 0, "Start Service");
+    	menu.add(0, START_SERVER_ID, 0, "Start Service");
         menu.add(0, STOP_SERVER_ID, 0, "Stop Service");
-		return s;
+        
+    	//MenuItem item = menu.add("Execute command");
+    	//item.setIcon(R.drawable.test);
+    	menu.setGroupCheckable(1, true, true);
+    	menu.add(1, MODE_SCAN_ID, 0, "Scan Mode").setCheckable(true);
+        menu.add(1, MODE_MONITOR_ID, 0, "Monitor Mode").setCheckable(true);
+        menu.add(1, MODE_LAZY_ID, 0, "Lazy Mode").setCheckable(true);
+        menu.getItem(MODE_SCAN_ID).setChecked(true);
+    	return s;
 	}
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -89,19 +97,27 @@ public class AndroidFileBrowser extends ListActivity {
         case START_SERVER_ID:
         	Log.i("teledroid","starting synchronization service");
         	startService(new Intent(AndroidFileBrowser.this, BackgroundService.class));
-            return true;
+            break;
 	    case STOP_SERVER_ID:
 	    	Log.i("teledroid","stopping synchronization service");
 	    	stopService(new Intent(AndroidFileBrowser.this, BackgroundService.class));
-	        return true;
+	        break;
+	    case MODE_SCAN_ID:
+	    	Log.i("teledroid","switching to Scan Mode");
+	    	BackgroundService.mSyncMode = BackgroundService.SYNC_MODE_SCAN; 
+	    	item.setChecked(true);
+	    	break;
+	    case MODE_MONITOR_ID:
+	    	Log.i("teledroid","switching to Monitor Mode");
+	    	BackgroundService.mSyncMode = BackgroundService.SYNC_MODE_MONITOR;
+	    	item.setChecked(true);
+	    	break;
+	    case MODE_LAZY_ID:
+	    	Log.i("teledroid","switching to Lazy Mode");
+	    	BackgroundService.mSyncMode = BackgroundService.SYNC_MODE_LAZY;
+	    	item.setChecked(true);
+	    	break;
         }
-        
-    	if (item.hasSubMenu() == false) {
-    		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-    		dialogBuilder.setMessage(" You selected " + item.getTitle());
-    		dialogBuilder.setCancelable(true);
-    		dialogBuilder.create().show();
-    	}
     	return true;
     }
 	/**
