@@ -12,10 +12,9 @@ import android.util.Log;
 public class FileMonitorThread implements Runnable {
     
 	private static final int PERIOD   = 5 * 1000;
-    private static final int TIMEDIFF = 1 * 1000;
-    public static boolean stopSignal = false;
-    public enum Direction { ServerToClient, ClientToServer }
-    private BackgroundService bs;
+    
+	public static boolean stopSignal = false;
+	public enum Direction { ServerToClient, ClientToServer }
     
     private int mNFD;
     
@@ -44,7 +43,7 @@ public class FileMonitorThread implements Runnable {
     	Log.d("teledroid", "File monitor thread ended.");
     }
 
-    private void registerDir(final File dir) {
+    public void registerDir(final File dir) {
 		if (!dir.isDirectory()) {
 			Log.e("teledroid", "registerDir was passed a file that isn't a directory: " +  
 					dir.getAbsolutePath());
@@ -55,8 +54,8 @@ public class FileMonitorThread implements Runnable {
 		dirStack.add(dir);
 		while(!dirStack.empty()){
 			final File currentDir = dirStack.pop();
-			//	Further implementation may watch directory, current file only.
-			//registerFile(currentFile.getAbsolutePath());
+			//TODO:	Further implementation may watch directory, current file only.
+			registerFile(currentDir.getAbsolutePath());
 			for (File currentFile : currentDir.listFiles()) {
 				if (currentFile.isDirectory())
 					dirStack.push(currentFile);
@@ -66,9 +65,9 @@ public class FileMonitorThread implements Runnable {
 		}
 	}
     
-    private void registerFile(String file) {
+    public void registerFile(String file) {
     	if( !mFileList.containsValue(file)){
-    		Integer wd = Notify.registerFile(mNFD, file, Notify.NOTIFY_MONITOR);
+    		Integer wd = Notify.registerFile(mNFD, file, Notify.IN_ALL_EVENTS);//NOTIFY_MONITOR);
     		if( wd > 0){
     			Log.d("teledroid", "Registering file " + file + " get wd:" + wd +".");
     			mFileList.put(wd, file);
@@ -82,17 +81,57 @@ public class FileMonitorThread implements Runnable {
     	Object filename = mFileList.get(fileNum);
     	if(filename != null){
     		event = Notify.eventMask();
-    		Log.d("teledroid", "Adding event "+Notify.maskToEvent(event)+" for "+filename);
-    		if((event & Notify.NOTIFY_DELETE) == Notify.IN_DELETE_SELF || (event & Notify.NOTIFY_DELETE) == Notify.IN_MOVE_SELF)
+    		
+    		switch(event){
+    		case Notify.IN_CREATE:
+    		case Notify.IN_MOVED_TO:
+    			mFileChanges.put(filename.toString() + "/" + Notify.newFile(), new ModificationInfo(
+        				(new File(filename.toString())).lastModified()));
+    			registerFile(filename.toString() + "/" + Notify.newFile());
+    			Log.d("teledroid", "[" + mFileChanges.size()+ "]\tFile " + Notify.newFile() + " created in / moved to " + filename);
+    			break;
+    		case Notify.IN_DELETE:
+    		case Notify.IN_MOVED_FROM:
+    			mFileChanges.put(filename.toString() + "/" + Notify.newFile(), new ModificationInfo(
+    					(new File(filename.toString())).lastModified(), ModificationInfo.Kind.DELETED));
+    			Log.d("teledroid", "[" + mFileChanges.size()+ "]\tFile " + Notify.newFile() + " deleted/moved from " + filename);
+    			break;
+    		case Notify.IN_DELETE_SELF:
+    		case Notify.IN_MOVE_SELF:
     			mFileChanges.put(filename.toString(), new ModificationInfo(
         				(new File(filename.toString())).lastModified(), ModificationInfo.Kind.DELETED));
-    		else
-    			mFileChanges.put(filename.toString(), new ModificationInfo(
-    				(new File(filename.toString())).lastModified()));
+    			Log.d("teledroid", "[" + mFileChanges.size()+ "]\tFile " + filename + " deleted/moved");
+    			break;
+    		case Notify.IN_CLOSE_WRITE:
+    			File file = new File(filename.toString());
+    			if(!file.isDirectory())
+    				mFileChanges.put(filename.toString(), new ModificationInfo(
+    						file.lastModified()));
+    			Log.d("teledroid", "[" + mFileChanges.size()+ "]\tFile " + filename + " modified");
+    			break;
+    		default:
+    			Log.d("teledroid.ignore", "Ignored event " + Notify.maskToEvent(event) +" for file " + filename);
+    		}
     	}
     }
     
+    /*
+    public void appendChange(Object pathname, String filename){
+    	File file = new File(pathname.toString() + "/" + filename);
+    	if(file.isFile())
+    		mFileChanges.put(file.getAbsolutePath(), new ModificationInfo(
+				file.lastModified()));
+    }
+    
+    public void appendChange(Object filename){
+    	File file = new File(filename.toString());
+    	if(file.isFile())
+    		mFileChanges.put(filename.toString(), new ModificationInfo(
+				file.lastModified()));
+    }
+    */
     public Map<String,ModificationInfo> getLatestChanges() {
+    	Log.d("teledroid", "Local changes: "+mFileChanges.size());
     	Map<String,ModificationInfo> result = mFileChanges;
     	mFileChanges = new LinkedHashMap<String,ModificationInfo>();
     	return result;
@@ -139,8 +178,9 @@ class Notify {
                                               | IN_DELETE_SELF | IN_MOVE_SELF);
     
     public final static int NOTIFY_DELETE = (IN_DELETE_SELF | IN_MOVE_SELF);
-    public final static int NOTIFY_MONITOR =  (IN_ACCESS | IN_MODIFY | IN_ATTRIB | IN_CLOSE_WRITE 
-    											 | IN_DELETE_SELF | IN_MOVE_SELF);
+    public final static int NOTIFY_MONITOR =  ( IN_MODIFY | IN_CLOSE_WRITE | IN_MOVED_FROM
+    											| IN_MOVED_TO | IN_CREATE | IN_DELETE 
+    											| IN_DELETE_SELF | IN_MOVE_SELF);
     
     static {
     	// The runtime will add "lib" on the front and ".o" on the end of
@@ -170,6 +210,24 @@ class Notify {
     	case IN_CLOSE_WRITE:
     		event = "write close";
     		break;
+    	case IN_CLOSE_NOWRITE:
+    		event = "nowrite close";
+    		break;
+    	case IN_OPEN:
+    		event = "open";
+    		break;
+    	case IN_MOVED_FROM:
+    		event = "move from";
+    		break;
+    	case IN_MOVED_TO:
+    		event = "move to";
+    		break;
+    	case IN_CREATE:
+    		event = "create";
+    		break;
+    	case IN_DELETE:
+    		event = "delete";
+    		break;
     	case IN_DELETE_SELF:
     		event = "delete self";
 	    	break;
@@ -186,6 +244,7 @@ class Notify {
     public static native int registerFile(int nfd, String file, int mask);
     public static native int nextEvent();
     public static native int eventMask();
+    public static native String newFile();
     public static native boolean hasNext(int nfd);
     
 }

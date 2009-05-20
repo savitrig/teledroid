@@ -69,6 +69,20 @@ public class BackgroundService extends Service {
 		}
 	}
 
+	public void restartService(){
+		ScanFilesThread.stopSignal = true;
+		Toast.makeText(this, R.string.local_service_stopped,
+				Toast.LENGTH_SHORT).show();
+		Log.d("teledroid.BackgroundService", "synchronization service stopped");
+		
+		//Todo: Notification and delay(PERIOD+)
+		
+		ScanFilesThread.stopSignal = false;
+		scanFilesThread = new Thread(new ScanFilesThread(this));
+		scanFilesThread.start();
+		Log.d("teledroid.BackgroundService", "synchronization service started");
+		
+	}
 	public void beginSyncNotification(List<SyncAction> syncActions) {
 		int[] counts = syncCounts(syncActions);
 		
