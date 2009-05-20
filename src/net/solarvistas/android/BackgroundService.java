@@ -125,6 +125,6 @@ public class BackgroundService extends Service {
 
         // Send the notification.
         // We use a layout id because it is a unique number.  We use it later to cancel.
-//        mNM.notify(R.string.local_service_started, notification);
+        mNM.notify(777, notification);
     }
 }
