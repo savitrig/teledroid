@@ -30,43 +30,28 @@ public class ScanFilesThread implements Runnable {
     public ScanFilesThread(BackgroundService bs) {
     	this.bs = bs;
     }
+    private Map<String,ModificationInfo> serverInfo = null, localInfo = null;
+	Channel remoteChangeStream = null;
     
 	public void run() {
 		go();
 		onFinished();
+		Log.i("teledroid", "ScanFilesThread ended");
 	}
 	
 	public void go() {
-	    Map<String,ModificationInfo> serverInfo = null, localInfo = null;
 		final String remoteDir = "sdcard";
 		final File localDir  = AndroidFileBrowser.rootDirectory;
-		Channel remoteChangeStream = null;
-		localMonitor = new FileMonitorThread();
-		new Thread(localMonitor).start();
+		
+		//do one initial scan to get synchronized
+		dirScan(localDir, remoteDir);
 		
 		while (!stopSignal) {
-//				Log.d("Files Map", mFilesMap.toString());
-			if (serverInfo == null) {
-				serverInfo = remoteDirscan(remoteDir);
-				localInfo  = localDirscan(localDir);
-				try {
-					remoteChangeStream = BackgroundService.ssh.Exec("pull-sync " + remoteDir + "\n");
-				} catch (Exception e) {
-					Log.e("teledroid", "Unable to open pull-sync connection to server");
-					e.printStackTrace();
-				}
-			}
-			else {
-				if(BackgroundService.mSyncMode == BackgroundService.SYNC_MODE_MONITOR){
-					localInfo  = localMonitor.getLatestChanges();
-					serverInfo = getRemoteChanges(remoteChangeStream);
-				}else {
-					serverInfo = remoteDirscan(remoteDir);
-					localInfo  = localDirscan(localDir);	
-				}
-			}
-			if (localInfo == null)  return;
-			
+			if(BackgroundService.mSyncMode == BackgroundService.SYNC_MODE_MONITOR)
+				onlyChanges(localDir, remoteDir);
+			else
+				dirScan(localDir, remoteDir);
+
 			List<SyncAction> syncActions = getSynchronizationActions(serverInfo, localInfo);
 			
 			int successfulCount = 0;
@@ -91,9 +76,30 @@ public class ScanFilesThread implements Runnable {
 	}
 	
 	private void onFinished() {
-		FileMonitorThread.stopSignal = true;
+		localMonitor.stopSignal = true;
 	}
 	
+	private void dirScan(File localDir, String remoteDir) {
+		serverInfo = remoteDirscan(remoteDir);
+		localInfo  = localDirscan(localDir);
+	}
+	
+	private void onlyChanges (File localDir, String remoteDir) {
+		if (localMonitor == null || remoteChangeStream == null) {
+			try {
+				remoteChangeStream = BackgroundService.ssh.Exec("pull-sync " + remoteDir + "\n");
+			} catch (Exception e) {
+				Log.e("teledroid", "unable to open remoteChangeStream",e);
+				return;
+			}
+			localMonitor = new FileMonitorThread();
+			new Thread(localMonitor, "Local monitor thread").start();
+		}
+		localInfo  = localMonitor.getLatestChanges();
+		serverInfo = getRemoteChanges(remoteChangeStream);
+		Log.i("teledroid", "inotify found " + localInfo.size() + " local changes");
+		Log.i("teledroid", "server found " + serverInfo.size() + " remote changes");
+	}
 	
 	private List<SyncAction> getSynchronizationActions(Map<String, ModificationInfo> serverInfo, Map<String, ModificationInfo> localInfo) {
 		Stack<SyncAction> results = new Stack<SyncAction>();
@@ -108,7 +114,7 @@ public class ScanFilesThread implements Runnable {
 		try {
 			OutputStream out = remoteChangeStream.getOutputStream();
 			out.write("\n".getBytes()); out.flush();
-			return fetchJSON(remoteChangeStream);
+			return fetchJSON(remoteChangeStream, 1000);
 		} catch (Exception e) {
 			Log.e("teledroid", "Error getting changes from server");
 			e.printStackTrace();
@@ -145,7 +151,7 @@ public class ScanFilesThread implements Runnable {
 		Channel chan = null;
 		try {
 			chan = BackgroundService.ssh.Exec("dir-print " + dirname + "\n");
-			result = fetchJSON(chan);
+			result = fetchJSON(chan, 8 * 1000);
 		} catch (Exception e) {
 			Log.e("teledroid", "Error getting dir-print info from server");
 			e.printStackTrace();
@@ -158,14 +164,17 @@ public class ScanFilesThread implements Runnable {
 
 
 	@SuppressWarnings("unchecked")
-	private Map<String,ModificationInfo> fetchJSON(Channel channel) throws IOException, JSONException {
+	private Map<String,ModificationInfo> fetchJSON(Channel channel, long timeout) throws IOException, JSONException {
 		BufferedReader input = new BufferedReader(new InputStreamReader(channel
 								   .getInputStream()), 8 * 1024);
 		String msg = "";
 		
 		//skip the echoed line of the command ran
-		while (!msg.contains("{"))
+		while (!msg.contains("{")) {
 			msg = input.readLine();
+			Log.v("teledroid", "read from server: " + msg);
+		}
+	
 
 		JSONObject jsonMap = new JSONObject(msg);
 		Map<String,ModificationInfo> result = new LinkedHashMap<String,ModificationInfo>(jsonMap.length());
@@ -208,7 +217,8 @@ public class ScanFilesThread implements Runnable {
     		BackgroundService.ssh.SCPFrom(parentPath+action.filename, action.filename);
 	    	File f = new File(action.filename);
 	    	f.setLastModified(action.modificationInfo.mtime);
-	    	localMonitor.registerFile(action.filename);
+	    	if (localMonitor != null)
+	    		localMonitor.registerFile(action.filename);
     		break;
     	case ClientToServer:
     		BackgroundService.ssh.SCPTo(action.filename, parentPath+action.filename);

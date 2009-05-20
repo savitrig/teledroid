@@ -19,6 +19,7 @@ public class BackgroundService extends Service {
     public static Thread fileMonitorThread = null; //bcast thread
     public static Connection ssh;
 
+    public enum SyncMode {SCAN, MONITOR, LAZY};
     public final static int SYNC_MODE_SCAN = 1;
     public final static int SYNC_MODE_MONITOR = 2;
     public final static int SYNC_MODE_LAZY = 3;
@@ -33,7 +34,7 @@ public class BackgroundService extends Service {
         showNotification();
         
         ScanFilesThread.stopSignal = false;
-		scanFilesThread = new Thread(new ScanFilesThread(this));
+		scanFilesThread = new Thread(new ScanFilesThread(this), "Scan files thread");
 		scanFilesThread.start();
 		Log.d("teledroid.BackgroundService", "synchronization service started");
     }

@@ -11,12 +11,12 @@ import android.util.Log;
 
 public class FileMonitorThread implements Runnable {
     
-	private static final int PERIOD   = 5 * 1000;
-    
-	public static boolean stopSignal = false;
-	public enum Direction { ServerToClient, ClientToServer }
-    
+	public boolean stopSignal;
     private int mNFD;
+    
+    public FileMonitorThread() {
+    	stopSignal = false;
+    }
     
     Map<String,ModificationInfo> mFileChanges;
     Map<Integer,String>	mFileList = new LinkedHashMap<Integer, String>();
@@ -26,21 +26,17 @@ public class FileMonitorThread implements Runnable {
     	mFileChanges = new LinkedHashMap<String, ModificationInfo>();
     	try{
     		mNFD = Notify.initNotify();
-    		Log.d("teledroid", "notify initiated, get nfd " + mNFD + ".");
+    		Log.i("teledroid", "notify initiated, get nfd " + mNFD + ".");
     	}catch(Exception e){
     		Log.e("teledroid", "initNotify", e);
     	}
     	registerDir(AndroidFileBrowser.rootDirectory);
-    	while(!stopSignal){
-    		Log.d("teledroid", "Checking incoming event. Incoming? "+Notify.hasNext(mNFD));
-    		while(Notify.hasNext(mNFD)){
-    			interpEvent(Notify.nextEvent());
-    		}
-    		try {
-    			Thread.sleep(PERIOD);
-    		} catch (InterruptedException e) {}
+    	while(Notify.hasNext(mNFD)){
+    		if (stopSignal) break;
+    		interpEvent(Notify.nextEvent());
     	}
-    	Log.d("teledroid", "File monitor thread ended.");
+    		
+    	Log.i("teledroid", "File monitor thread ended.");
     }
 
     public void registerDir(final File dir) {
@@ -48,7 +44,7 @@ public class FileMonitorThread implements Runnable {
 			Log.e("teledroid", "registerDir was passed a file that isn't a directory: " +  
 					dir.getAbsolutePath());
 		}
-		Log.d("teledroid", "Registering directory " + dir.getAbsolutePath() + ".");
+		Log.i("teledroid", "Registering directory " + dir.getAbsolutePath() + ".");
 		
 		Stack<File> dirStack = new Stack<File>();
 		dirStack.add(dir);
@@ -72,7 +68,7 @@ public class FileMonitorThread implements Runnable {
     			Log.d("teledroid", "Registering file " + file + " get wd:" + wd +".");
     			mFileList.put(wd, file);
     		}else
-    			Log.d("teledroid", "Unable to register file " + file + ".");
+    			Log.e("teledroid", "Unable to register file " + file + ".");
     	}
     }
     
@@ -88,29 +84,29 @@ public class FileMonitorThread implements Runnable {
     			mFileChanges.put(filename.toString() + "/" + Notify.newFile(), new ModificationInfo(
         				(new File(filename.toString())).lastModified()));
     			registerFile(filename.toString() + "/" + Notify.newFile());
-    			Log.d("teledroid", "[" + mFileChanges.size()+ "]\tFile " + Notify.newFile() + " created in / moved to " + filename);
+    			Log.v("teledroid", "[" + mFileChanges.size()+ "]\tFile " + Notify.newFile() + " created in / moved to " + filename);
     			break;
     		case Notify.IN_DELETE:
     		case Notify.IN_MOVED_FROM:
     			mFileChanges.put(filename.toString() + "/" + Notify.newFile(), new ModificationInfo(
     					(new File(filename.toString())).lastModified(), ModificationInfo.Kind.DELETED));
-    			Log.d("teledroid", "[" + mFileChanges.size()+ "]\tFile " + Notify.newFile() + " deleted/moved from " + filename);
+    			Log.v("teledroid", "[" + mFileChanges.size()+ "]\tFile " + Notify.newFile() + " deleted/moved from " + filename);
     			break;
     		case Notify.IN_DELETE_SELF:
     		case Notify.IN_MOVE_SELF:
     			mFileChanges.put(filename.toString(), new ModificationInfo(
         				(new File(filename.toString())).lastModified(), ModificationInfo.Kind.DELETED));
-    			Log.d("teledroid", "[" + mFileChanges.size()+ "]\tFile " + filename + " deleted/moved");
+    			Log.v("teledroid", "[" + mFileChanges.size()+ "]\tFile " + filename + " deleted/moved");
     			break;
     		case Notify.IN_CLOSE_WRITE:
     			File file = new File(filename.toString());
     			if(!file.isDirectory())
     				mFileChanges.put(filename.toString(), new ModificationInfo(
     						file.lastModified()));
-    			Log.d("teledroid", "[" + mFileChanges.size()+ "]\tFile " + filename + " modified");
+    			Log.v("teledroid", "[" + mFileChanges.size()+ "]\tFile " + filename + " modified");
     			break;
     		default:
-    			Log.d("teledroid.ignore", "Ignored event " + Notify.maskToEvent(event) +" for file " + filename);
+    			Log.v("teledroid.ignore", "Ignored event " + Notify.maskToEvent(event) +" for file " + filename);
     		}
     	}
     }

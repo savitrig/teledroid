@@ -78,7 +78,7 @@ JNIEXPORT jboolean JNICALL Java_net_solarvistas_android_Notify_hasNext
 	res = read(nfd, event_buf, sizeof(event_buf));
 	if(res < (int)sizeof(*event)) {
 		if(errno != EINTR)
-			LOGD("ERROR: could not get event");
+			LOGE("ERROR: could not get event");
 		return JNI_FALSE;
     }
 	return JNI_TRUE;
