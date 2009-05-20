@@ -60,7 +60,7 @@ public class ScanFilesThread implements Runnable {
 //				localInfo  = localMonitor.getLatestChanges();
 //				serverInfo = getRemoteChanges(remoteChangeStream);
 			}
-			if (localInfo == null) return;
+			if ((localInfo == null) || (serverInfo == null)) return;
 			
 			List<SyncAction> syncActions = getSynchronizationActions(serverInfo, localInfo);
 			
@@ -83,6 +83,7 @@ public class ScanFilesThread implements Runnable {
 				Thread.sleep(PERIOD);
 			} catch (InterruptedException e) {}
 		}
+		FileMonitorThread.stopSignal = true;
 	}
 	
 	
