@@ -9,13 +9,16 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.jcraft.jsch.Channel;
 
@@ -24,8 +27,14 @@ public class ScanFilesThread implements Runnable {
     private static final int TIMEDIFF = 1 * 1000;
     public static boolean stopSignal = false;
     public enum Direction { ServerToClient, ClientToServer }
+    private BackgroundService bs;
+    
+    public ScanFilesThread(BackgroundService bs) {
+    	this.bs = bs;
+    }
     
 	public void run() {
+		Looper.prepare(); //for making toast notifications
 	    Map<String,ModificationInfo> serverInfo = null, localInfo = null;
 		final String remoteDir = "sdcard";
 		final File localDir  = AndroidFileBrowser.rootDirectory;
@@ -52,10 +61,19 @@ public class ScanFilesThread implements Runnable {
 //				serverInfo = getRemoteChanges(remoteChangeStream);
 			}
 			if (localInfo == null) return;
-			autoSyn(serverInfo, localInfo, Direction.ServerToClient);
-			autoSyn(localInfo, serverInfo, Direction.ClientToServer);
-
 			
+			List<SyncAction> syncActions = getSynchronizationActions(serverInfo, localInfo);
+			
+			if (syncActions.size() != 0) {
+				bs.beginSyncNotification(syncActions);
+				for (SyncAction action : syncActions){
+					if (stopSignal) return;
+					sync(action);
+				}
+				bs.finishedSyncNotification(syncActions);
+			}
+
+			if (stopSignal) return;
 			try {
 				Thread.sleep(PERIOD);
 			} catch (InterruptedException e) {}
@@ -63,6 +81,14 @@ public class ScanFilesThread implements Runnable {
 	}
 	
 	
+	private List<SyncAction> getSynchronizationActions(Map<String, ModificationInfo> serverInfo, Map<String, ModificationInfo> localInfo) {
+		Stack<SyncAction> results = new Stack<SyncAction>();
+		autoSyn(serverInfo, localInfo, Direction.ServerToClient, results);
+		autoSyn(localInfo, serverInfo, Direction.ClientToServer, results);
+		return results;
+	}
+
+
 	private Map<String,ModificationInfo> getRemoteChanges(Channel remoteChangeStream) {
 		Log.v("teledroid","Fetching changes");
 		try {
@@ -145,49 +171,41 @@ public class ScanFilesThread implements Runnable {
     
 	public static final int BUMP_MSG = 0x101;
 
-    private void autoSyn(Map<String,ModificationInfo> o1, Map<String,ModificationInfo> o2, Direction direction) {    	
+    private void autoSyn(Map<String,ModificationInfo> o1, Map<String,ModificationInfo> o2, Direction direction, Stack<SyncAction> actions) {    	
     	for (String filename : o1.keySet()) {
-			ModificationInfo value1 = o1.get(filename);
+			ModificationInfo mod1 = o1.get(filename);
 			if (!o2.containsKey(filename)){
-				syn(filename, direction, value1.mtime);
+				actions.push(new SyncAction(filename, direction, mod1));
 				continue;
 			}
 			
-			ModificationInfo value2 = o2.get(filename);
-			compareAndSyn(filename, value1.mtime, value2.mtime, direction);	
+			ModificationInfo mod2 = o2.get(filename);
+			if (mod1.mtime - mod2.mtime > TIMEDIFF)
+				actions.push(new SyncAction(filename, direction, mod1));
 		}
     }
     
-    private void compareAndSyn(String filename, Long mtime1, Long mtime2, Direction direction) {
-    	if (mtime1 - mtime2 > TIMEDIFF) {
-	    	Log.d("Test", Long.toString(mtime1 - mtime2));
-	    	syn (filename, direction, mtime1);
-    	}
-    }
-    
-    private void syn(String fileName, Direction direction, Long canonicalModifiedTime) {
+    private void sync(SyncAction action) {
     	String parentPath = "/home/teledroid/";
     	
-    	switch (direction) {
+    	switch (action.direction) {
     	case ServerToClient:
 //    		Log.d("teledroid","transferring " + fileName + " from server");
-    		if (canonicalModifiedTime != null) {
-	    		BackgroundService.ssh.SCPFrom(parentPath+fileName, fileName);
-	    		File f = new File(fileName);
-	    		f.setLastModified(canonicalModifiedTime);
-    		}
+    		BackgroundService.ssh.SCPFrom(parentPath+action.filename, action.filename);
+	    	File f = new File(action.filename);
+	    	f.setLastModified(action.modificationInfo.mtime);
     		break;
     	case ClientToServer:
-    		BackgroundService.ssh.SCPTo(fileName, parentPath+fileName);
+    		BackgroundService.ssh.SCPTo(action.filename, parentPath+action.filename);
     	    String pattern = "yyyyMMddHHmm.ss";
     	    SimpleDateFormat format = new SimpleDateFormat(pattern);
-			String formatDate = format.format((new Date(canonicalModifiedTime)));
+			String formatDate = format.format((new Date(action.modificationInfo.mtime)));
 
     		Channel execChannel = null;
     		try {
-				execChannel = BackgroundService.ssh.Exec("touch -t "+formatDate+" "+parentPath+fileName+"\n");
+				execChannel = BackgroundService.ssh.Exec("touch -t "+formatDate+" "+parentPath+action.filename+"\n");
 			} catch (Exception e) {
-				Log.e("teledroid", "unable to touch file " + parentPath+fileName);
+				Log.e("teledroid", "unable to touch file " + parentPath+action.filename);
 				e.printStackTrace();
 			}
 	        if (execChannel != null) execChannel.disconnect();
