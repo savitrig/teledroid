@@ -1,5 +1,7 @@
 package net.solarvistas.android;
 
+import java.util.List;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -28,7 +30,7 @@ public class BackgroundService extends Service {
         //fileMonitorThread = new Thread(new FileMonitorThread(this));
         //fileMonitorThread.start();
         ScanFilesThread.stopSignal = false;
-		scanFilesThread = new Thread(new ScanFilesThread());
+		scanFilesThread = new Thread(new ScanFilesThread(this));
 		scanFilesThread.start();
 		Log.d("teledroid.BackgroundService", "synchronization service started");
     }
@@ -64,6 +66,31 @@ public class BackgroundService extends Service {
 		}
 	}
 
+	public void beginSyncNotification(List<SyncAction> syncActions) {
+		Notification notification = new Notification(R.drawable.uponelevel, "Syncing " + syncActions.size() + " files", System.currentTimeMillis());
+		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+                new Intent(this, AndroidFileBrowser.class), 0);
+		int sending = 0, receiving = 0;
+		for (SyncAction action : syncActions)
+			if (action.direction == ScanFilesThread.Direction.ClientToServer) sending++;
+			else receiving++;
+		notification.setLatestEventInfo(this, "Sync Started", "Sending " + sending + " files, receiving " + receiving + " files.", contentIntent);
+		mNM.notify(777, notification);
+	}
+	
+	public void finishedSyncNotification(List<SyncAction> syncActions) {
+		Notification notification = new Notification(R.drawable.uponelevel, "Finished syncing " + syncActions.size() + " files", System.currentTimeMillis());
+		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+                new Intent(this, AndroidFileBrowser.class), 0);
+		int sending = 0, receiving = 0;
+		for (SyncAction action : syncActions)
+			if (action.direction == ScanFilesThread.Direction.ClientToServer) sending++;
+			else receiving++;
+		notification.setLatestEventInfo(this, "Sync Finished", "Finished sending " + sending + " files, receiving " + receiving + " files.", contentIntent);
+		
+		mNM.notify(777, notification);
+	}
+	
     /**
      * Show a notification while this service is running.
      */
@@ -74,7 +101,7 @@ public class BackgroundService extends Service {
         // Set the icon, scrolling text and timestamp
         Notification notification = new Notification(R.drawable.stat_sample, text,
                 System.currentTimeMillis());
-
+        
         // The PendingIntent to launch our activity if the user selects this notification
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, AndroidFileBrowser.class), 0);
@@ -85,6 +112,6 @@ public class BackgroundService extends Service {
 
         // Send the notification.
         // We use a layout id because it is a unique number.  We use it later to cancel.
-        mNM.notify(R.string.local_service_started, notification);
+//        mNM.notify(R.string.local_service_started, notification);
     }
 }
