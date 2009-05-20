@@ -13,21 +13,19 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.ContentUris;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.ListView;
-
-import com.anddev.filebrowser.IconifiedText;
-import com.anddev.filebrowser.IconifiedTextListAdapter;
-import com.jcraft.jsch.JSchException;
+import android.util.Log;
 
 public class AndroidFileBrowser extends ListActivity {
 
@@ -37,17 +35,11 @@ public class AndroidFileBrowser extends ListActivity {
 
     private final DISPLAYMODE displayMode = DISPLAYMODE.RELATIVE;
     private List<IconifiedText> directoryEntries = new ArrayList<IconifiedText>();
-    public final static File rootDirectory = new File("/sdcard/");
-    private File currentDirectory = rootDirectory;
-    
-    private Menu mMenu;
+    private File currentDirectory = new File("/");
+
     private static final int START_SERVER_ID = Menu.FIRST;
     private static final int STOP_SERVER_ID = Menu.FIRST+1;
-    private static final int MODE_SCAN_ID = Menu.FIRST+2;
-    private static final int MODE_MONITOR_ID = Menu.FIRST+3;
-    private static final int MODE_LAZY_ID = Menu.FIRST+4;
-    //private static final int EXECUTE_ID = Menu.FIRST+5;
-
+    
     private String type;
 
     /**
@@ -60,13 +52,10 @@ public class AndroidFileBrowser extends ListActivity {
         
         //BackgroundService.ssh = new Connection("cloud", "teledroid", "to.zxi.cc", 22);
         BackgroundService.ssh = new Connection("teledroid", "Lmssf6R6", "teledroid.rictic.com", 22);
-        try {
-			BackgroundService.ssh.connect();
-			Log.v("teledroid.AndroidFileBrowser", "connected successfully");
-		} catch (JSchException e) {
-			Log.e("teledroid.AndroidFileBrowser", "unable to connect");
-			e.printStackTrace();
-		}
+        BackgroundService.ssh.connect();
+        //BackgroundService.ssh.SCPTo("/sdcard/aa.txt","/home/teledroid/sdcard/aa.txt"); // ClientToServer
+        //BackgroundService.ssh.SCPFrom("/home/teledroid/sdcard/test.txt","/sdcard/test.txt"); // ServerToClient
+        //startService(new Intent(AndroidFileBrowser.this, BackgroundService.class));
     }
 
     @Override
@@ -79,59 +68,33 @@ public class AndroidFileBrowser extends ListActivity {
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
     	boolean s = super.onCreateOptionsMenu(menu);
-    	mMenu = menu;
-    	menu.add(0, START_SERVER_ID, 0, "Start Service");
+    	MenuItem item = menu.add("Execute command");
+    	item.setIcon(R.drawable.test);
+    	SubMenu presetMenu = menu.addSubMenu("pdflatex");
+    	presetMenu = menu.addSubMenu("make");
+        menu.add(0, START_SERVER_ID, 0, "Start Service");
         menu.add(0, STOP_SERVER_ID, 0, "Stop Service");
-        
-    	//MenuItem item = menu.add("Execute command");
-    	//item.setIcon(R.drawable.test);
-    	
-    	menu.add(1, MODE_SCAN_ID, 0, "Scan Mode").setIcon(R.drawable.blank);
-        menu.add(1, MODE_MONITOR_ID, 0, "Monitor Mode").setIcon(R.drawable.blank);;
-        menu.add(1, MODE_LAZY_ID, 0, "Lazy Mode").setIcon(R.drawable.blank);
-        for(int id = 0 ; id < 3; id++){
-        	if( BackgroundService.mSyncMode == id + 1) {
-        		menu.getItem(MODE_SCAN_ID + id - 1).setIcon(R.drawable.sync);
-        		break;
-        	}
-        }
-        
-    	return s;
+		return s;
 	}
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-    	
-    	switch (item.getItemId()) {
+    
+        switch (item.getItemId()) {
         case START_SERVER_ID:
-        	Log.i("teledroid","starting synchronization service");
         	startService(new Intent(AndroidFileBrowser.this, BackgroundService.class));
-            break;
+            return true;
 	    case STOP_SERVER_ID:
-	    	Log.i("teledroid","stopping synchronization service");
 	    	stopService(new Intent(AndroidFileBrowser.this, BackgroundService.class));
-	        break;
-	    case MODE_SCAN_ID:
-	    	Log.i("teledroid","switching to Scan Mode");
-	    	BackgroundService.mSyncMode = BackgroundService.SYNC_MODE_SCAN;
-	    	for(int id = 0 ; id < 3; id++)
-	        	mMenu.getItem(MODE_SCAN_ID + id - 1).setIcon(R.drawable.blank);
-	        item.setIcon(R.drawable.sync);
-	    	break;
-	    case MODE_MONITOR_ID:
-	    	Log.i("teledroid","switching to Monitor Mode");
-	    	BackgroundService.mSyncMode = BackgroundService.SYNC_MODE_MONITOR;
-	    	for(int id = 0 ; id < 3; id++)
-	    		mMenu.getItem(MODE_SCAN_ID + id - 1).setIcon(R.drawable.blank);
-	    	item.setIcon(R.drawable.sync);
-	    	break;
-	    case MODE_LAZY_ID:
-	    	Log.i("teledroid","switching to Lazy Mode");
-	    	BackgroundService.mSyncMode = BackgroundService.SYNC_MODE_LAZY;
-	    	for(int id = 0 ; id < 3; id++)
-	        	mMenu.getItem(MODE_SCAN_ID + id - 1).setIcon(R.drawable.blank);
-	        item.setIcon(R.drawable.sync);
-	    	break;
-        }
+	        return true;
+        }    
+        
+    	if (item.hasSubMenu() == false) {
+    		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+    		dialogBuilder.setMessage(" You selected " + item.getTitle());
+    		dialogBuilder.setCancelable(true);
+    		dialogBuilder.create().show();
+    		BackgroundService.ssh.getShell();
+    	}
     	return true;
     }
 	/**
@@ -139,7 +102,7 @@ public class AndroidFileBrowser extends ListActivity {
      * root-directory of the file-system.
      */
     private void browseToRoot() {
-        browseTo(rootDirectory);
+        browseTo(new File("/sdcard/"));
     }
 
     /**
