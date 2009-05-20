@@ -26,19 +26,18 @@ public class ScanFilesThread implements Runnable {
     public enum Direction { ServerToClient, ClientToServer }
     
 	public void run() {
-	    Map<String,ModificationInfo> serverInfo;
-	    Map<String,ModificationInfo> localInfo;
+	    Map<String,ModificationInfo> serverInfo = null, localInfo = null;
 		final String remoteDir = "sdcard";
+		final File localDir  = AndroidFileBrowser.rootDirectory;
 		Channel remoteChangeStream = null;
-		serverInfo = null;
+		FileMonitorThread localMonitor = new FileMonitorThread();
+		new Thread(localMonitor).start();
 		
 		while (!stopSignal) {
-			localInfo = localDirscan(AndroidFileBrowser.rootDirectory);
-			if (localInfo == null) return;
-			
 //				Log.d("Files Map", mFilesMap.toString());
 			if (serverInfo == null) {
 				serverInfo = remoteDirscan(remoteDir);
+				localInfo  = localDirscan(localDir);
 				try {
 					remoteChangeStream = BackgroundService.ssh.Exec("pull-sync " + remoteDir + "\n");
 				} catch (Exception e) {
@@ -48,8 +47,11 @@ public class ScanFilesThread implements Runnable {
 			}
 			else {
 				serverInfo = remoteDirscan(remoteDir);
+				localInfo  = localDirscan(localDir);
+//				localInfo  = localMonitor.getLatestChanges();
 //				serverInfo = getRemoteChanges(remoteChangeStream);
 			}
+			if (localInfo == null) return;
 			autoSyn(serverInfo, localInfo, Direction.ServerToClient);
 			autoSyn(localInfo, serverInfo, Direction.ClientToServer);
 
@@ -99,30 +101,32 @@ public class ScanFilesThread implements Runnable {
 	
 	private Map<String,ModificationInfo> remoteDirscan(String dirname) {
 		Log.v("teledroid","Running remote dirscan");
+		Map<String,ModificationInfo> result = null;
+		Channel chan = null;
 		try {
-			return fetchJSON(BackgroundService.ssh.Exec("dir-print " + dirname + "\n"));
+			chan = BackgroundService.ssh.Exec("dir-print " + dirname + "\n");
+			result = fetchJSON(chan);
 		} catch (Exception e) {
-			Log.e("teledroid.SynThread.run", "Error getting dir-print info from server");
+			Log.e("teledroid", "Error getting dir-print info from server");
 			e.printStackTrace();
 		}
-		return null;
+		finally {
+			if (chan != null) chan.disconnect();
+		}
+		return result;
 	}
 
 
 	@SuppressWarnings("unchecked")
 	private Map<String,ModificationInfo> fetchJSON(Channel channel) throws IOException, JSONException {
 		BufferedReader input = new BufferedReader(new InputStreamReader(channel
-								   .getInputStream()));
-		String msg = null;
-		while (true) {
-			msg = input.readLine();
+								   .getInputStream()), 8 * 1024);
+		String msg = "";
 		
-			//skip the echoed line of the command ran
-			if (msg.contains("{")){
-				channel.disconnect();
-				break;
-			}
-		}
+		//skip the echoed line of the command ran
+		while (!msg.contains("{"))
+			msg = input.readLine();
+
 		JSONObject jsonMap = new JSONObject(msg);
 		Map<String,ModificationInfo> result = new LinkedHashMap<String,ModificationInfo>(jsonMap.length());
 		for (Iterator i = jsonMap.keys(); i.hasNext();) {
@@ -183,7 +187,7 @@ public class ScanFilesThread implements Runnable {
     		try {
 				execChannel = BackgroundService.ssh.Exec("touch -t "+formatDate+" "+parentPath+fileName+"\n");
 			} catch (Exception e) {
-				Log.e("teledroid.ScanFilesThread.syn", "unable to touch file " + parentPath+fileName);
+				Log.e("teledroid", "unable to touch file " + parentPath+fileName);
 				e.printStackTrace();
 			}
 	        if (execChannel != null) execChannel.disconnect();
