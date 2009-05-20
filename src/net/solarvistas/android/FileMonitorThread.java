@@ -68,9 +68,9 @@ public class FileMonitorThread implements Runnable {
     
     private void registerFile(String file) {
     	if( !mFileList.containsValue(file)){
-    		Integer wd = Notify.registerFile(mNFD, file, Notify.IN_ALL_EVENTS);
+    		Integer wd = Notify.registerFile(mNFD, file, Notify.NOTIFY_MONITOR);
     		if( wd > 0){
-    			Log.d("teledroid", "Registering file " + file + ".");
+    			Log.d("teledroid", "Registering file " + file + " get wd:" + wd +".");
     			mFileList.put(wd, file);
     		}else
     			Log.d("teledroid", "Unable to register file " + file + ".");
@@ -78,19 +78,18 @@ public class FileMonitorThread implements Runnable {
     }
     
     private void interpEvent(int event){
-    	Log.d("teledroid", "Checking event " + event); 
     	Integer fileNum = event;
     	Object filename = mFileList.get(fileNum);
     	if(filename != null){
     		event = Notify.eventMask();
-    		Log.d("teledroid", "Adding event "+event+" for "+filename);
+    		Log.d("teledroid", "Adding event "+Notify.maskToEvent(event)+" for "+filename);
     		if((event & Notify.NOTIFY_DELETE) == Notify.IN_DELETE_SELF || (event & Notify.NOTIFY_DELETE) == Notify.IN_MOVE_SELF)
     			mFileChanges.put(filename.toString(), new ModificationInfo(
         				(new File(filename.toString())).lastModified(), ModificationInfo.Kind.DELETED));
     		else
     			mFileChanges.put(filename.toString(), new ModificationInfo(
     				(new File(filename.toString())).lastModified()));
-    	}	
+    	}
     }
     
     public Map<String,ModificationInfo> getLatestChanges() {
@@ -150,12 +149,39 @@ class Notify {
     	try{
     		Log.d("teledroid", "Loading JNI Lib.");
     		System.loadLibrary("notify");
+    		registerNativeMethod();
     	}catch (Throwable tr){
     		Log.e("teledroid", "Can't load JNI", tr);
     	}
-        
     }
     
+    public static String maskToEvent(int mask){
+    	String event;
+    	switch(mask){
+    	case IN_ACCESS:
+    		event = "accessed";
+    		break;
+    	case IN_MODIFY:
+    		event = "modify";
+    		break;
+    	case IN_ATTRIB:
+    		event = "meta data change";
+    		break;
+    	case IN_CLOSE_WRITE:
+    		event = "write close";
+    		break;
+    	case IN_DELETE_SELF:
+    		event = "delete self";
+	    	break;
+	    case IN_MOVE_SELF:
+    		event = "move self";
+    		break;
+    	 default:
+    		event = "unknown";
+    	}
+    	return event;
+    }
+    public static native void registerNativeMethod();
     public static native int initNotify();
     public static native int registerFile(int nfd, String file, int mask);
     public static native int nextEvent();
