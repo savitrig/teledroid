@@ -10,11 +10,13 @@ sync files with remote server. Finally, note that two sorts of threads are invok
 There's the \verb+FileMonitorThread+, and the \verb+ScanFilesThread+. We prefer to implement threads rather than all the
 functions within one process because this enables us to decouple functionality and also make blocking calls.
 
+\onecolumn
 \begin{figure}[htp]
 \centering
 \includegraphics[scale=0.5]{architecture}
 \caption{\teledroid\ Architecture}\label{fig:architecture}
 \end{figure}
+\twocolumn
 
 \section{Implementation}
 \label{sec:Implementation}

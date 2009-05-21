@@ -12,8 +12,9 @@ In our experiments, we ran the \teledroid application on the background. In turn
 Our test device is an Android Dev Phone 1. It has a 528MHZ Qualcomm 7210 processor and 192 MB RAM. It features a touch screen and a trackball for navigation, and provides QWERTY slider keyboard for input. Wi-Fi, GPS, and Bluetooth v2.0 are also present. It also supports 3G WCDMA in 1700/2100 MHz and Quad-band GSM in 850/900/1800/1900 MHz. Note that the Android Dev Phone 1 includes 1GB MicroSC card as an external storage device. It can be replaced with a card of up to 16GB. Concerning the network environment, our tests utilized the University of San Francisco's internet connection, accessed through 802.11g.
 
 \subsection{Results}
-The results of our CPU usage tests are shown in Figure~\ref{fig:cpu}. However they were not as we expected. Monitor mode didn't gain any significant advantage over scan mode here. However, synchronization finished faster than in scan mode, so overall cpu usage should be lower than our tests indicate.
+The results of our CPU usage tests are shown in Figure~\ref{fig:cpu}. However they were not as we expected. Monitor mode didn't gain any significant advantage over scan mode here. However, synchronization finished faster than in scan mode, so overall cpu usage should be lower than our tests indicate. 
 
+\onecolumn
 \begin{center}
   \begin{tabular}{ | l || c | c | c | c | c | c | c | c | c | c | }
     \hline
@@ -30,7 +31,7 @@ Scan	& \% & \%	 & \%	& \% 	& \% 	& \%	& \%	& \%	& \%	& \%  		\\ \hline
 Monitor	& \% & \% 	 & \%	& \%	& \% 	& \%	& \%	& \%	& \%	& \%  		\\ \hline\hline
   \end{tabular}
 \end{center}
-
+\twocolumn
 %	& \% 	& \%	& \%	& \%	& \% 	& \%
 
 %92\%	88\%
@@ -48,14 +49,19 @@ Monitor	& \% & \% 	 & \%	& \%	& \% 	& \%	& \%	& \%	& \%	& \%  		\\ \hline\hline
 %2\%	
 %1\%
 
+\onecolumn
 \input{graph-cpu}
+\twocolumn
 Similar to our CPU usage results, the memory usage data was also disappointing. As shown in Figure~\ref{fig:memory}, the memory usage in monitor mode is even higher than scan mode initially. We think this is due in part to the fact that in monitor mode we have to perform an initial complete scan before we can switch over to the low overhead scan mode.  This, combined with the fact that monitor mode makes use of several more threads and an external JNI module seems to explain the difference.
+
+\onecolumn
 \input{graph-memory}
-
+\twocolumn
 In our tests of synchronization speed we finally got data that indicate that monitor version performs better. 
-As we can see in Figure~\ref{fig:speed}, the speed of monitor mode is faster than scan mode on the client side. However, the 
-server didn't show significant differences. This may be due to our current server side script using a pull-sync instead of push-sync as client side.
+As we can see in Figure~\ref{fig:speed}, the speed of monitor mode is faster than scan mode on the client side. However,
+the server didn't show significant differences. This may be due to our current server side script using a pull-sync instead of push-sync as client side.
 
+\onecolumn
 \begin{center}
   \begin{tabular}{ | l || c | c | c | c | }
     \hline
@@ -69,5 +75,8 @@ Averge 	& 41.9 & 42.5 &	29 & 43.3 \\
 	\hline
   \end{tabular}
 \end{center}
- 
+\twocolumn
+
+\twocolumn
 \input{graph-speed}
+\onecolumn
