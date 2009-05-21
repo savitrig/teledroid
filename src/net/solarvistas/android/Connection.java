@@ -57,7 +57,8 @@ public class Connection {
 
 	public Channel newShell() throws JSchException, IOException {
 		Channel channel = session.openChannel("shell");
-		channel.connect(3 * 1000);
+		channel.connect(5 * 1000);
+		//channel.connect();
 		return channel;
 	}
 
