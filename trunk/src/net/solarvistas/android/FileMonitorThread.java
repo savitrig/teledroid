@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Stack;
+import java.util.Map.Entry;
 
 import net.solarvistas.android.AndroidFileBrowser;
 import net.solarvistas.android.ModificationInfo;
@@ -61,28 +62,41 @@ public class FileMonitorThread implements Runnable {
 		}
 	}
     
-    public void registerFile(String file) {
-    	if( !mFileList.containsValue(file)){
-    		Integer wd = Notify.registerFile(mNFD, file, Notify.IN_ALL_EVENTS);//NOTIFY_MONITOR);
+    public void registerFile(String filename) {
+    	if( !mFileList.containsValue(filename)){
+    		Integer wd = Notify.registerFile(mNFD, filename, Notify.IN_ALL_EVENTS);//NOTIFY_MONITOR);
     		if( wd > 0){
-    			Log.d("teledroid", "Registering file " + file + " get wd:" + wd +".");
-    			mFileList.put(wd, file);
+    			Log.d("teledroid", "Registering file " + filename + " get wd:" + wd +".");
+    			mFileList.put(wd, filename);
     		}else
-    			Log.e("teledroid", "Unable to register file " + file + ".");
+    			Log.e("teledroid", "Unable to register file " + filename + ".");
     	}
     }
     
+    public void unregisterFile(String filename){
+    	if(mFileList.containsValue(filename)){
+    		for(Entry<Integer, String> file : mFileList.entrySet()){
+    			if(file.getValue().equals(filename)){
+    				unregisterFile(file.getKey());
+    				return;
+    			}
+    		}
+    	}
+    	Log.e("teledroid", "Unable to unregister file " + filename + ", file NOT found.");
+    }
+    
     public void unregisterFile(int wd){
-    	String file = mFileList.get(Integer.valueOf(wd));
-    	if( file != null ){
+    	String filename = mFileList.get(Integer.valueOf(wd));
+    	if( filename != null ){
     		int res = Notify.unregisterFile(mNFD, wd);
     		if( res > 0){
     			mFileList.remove(Integer.valueOf(wd));
-    			Log.d("teledroid", "Unregistering file " + file + " with wd:" + wd +".");
+    			Log.d("teledroid", "Unregistering file " + filename + " with wd:" + wd +".");
     		}else
-    			Log.e("teledroid", "Unable to unregister file " + file + ". Error: " + res);
+    			Log.e("teledroid", "Unable to unregister file " + filename + ". Error: " + res);
     	}
     }
+    
     private void interpEvent(int event){
     	Integer fileNum = event;
     	Object filename = mFileList.get(fileNum);
