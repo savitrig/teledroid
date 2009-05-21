@@ -1,8 +1,10 @@
 \section{Performance Evaluation}
 \label{sec:Performance}
 
-We conducted our \teledroid\ application in three different mode: scan mode, monitor mode, and lazy mode. In scan mode, local device and server will output their own list of files along with their modified time. Then, \teledroid\ compares the two lists with the modified time to determine whether the file should be sync from one side to the other. In monitor mode, we enable inotify process on both server side and client side to monitor the changed file. Once the file is changed, inotify will report to \teledroid\ and request to sync that file. In lazy mode, even when the file has been changed on either side, that file will not be synced until it is read by \teledroid. In a limit of time, we can not complete the functionality for lazy mode. Thus, lazy mode will be our future work and was not be used in our experiment.
+We conducted our tests in two different mode: scan mode, and monitor mode. In scan mode, the relevant portion of the filesystem is scanned and a tree is built of modification times, both locally and on the server.  The server then sends this information down to the local device, where they are compared to determine what needs to be synchronized. In monitor mode, we use filesystem monitors to watch for changed files on both server and client side, so the only files that are considered for synchronization are those which changed. 
 In our experiments, ......
+
+%more info is needed here on how the tests were actually carried out
 
 \subsection{Testing Plan}
 (Riku)
@@ -17,17 +19,10 @@ Plan:\\
 		(with new or modified files)\\
 				
 \subsection{Hardware Configuration}
-Our test device is an Android Dev Phone 1. There are one Qualcomm 7210 processor in 528MHZ and 192 MB RAM memory in Android 
-Dev Phone 1. With a touch screen and a trackball for navigation, it also provides QWERTY slider keyboard for input. Wi-Fi, 
-GPS,  and Bluetooth v2.0 are all supported in Android Dev Phone 1. For network standard of cellular provider, it can 
-support 3G WCDMA in 1700/2100 MHz and Quad-band GSM in 850/900/1800/1900 MHz. Note that Android Dev Phone 1 includes 1GB 
-MicroSC card as an external hard drive. It can be replaced with up to 16GB card. Concerning network environment, we 
-proposed to connect to CSLabs network in University of San Francisco using Wi-Fi connection.
+Our test device is an Android Dev Phone 1. It has a 528MHZ Qualcomm 7210 processor and 192 MB RAM. It features a touch screen and a trackball for navigation, and provides QWERTY slider keyboard for input. Wi-Fi, GPS, and Bluetooth v2.0 are also present. It also supports 3G WCDMA in 1700/2100 MHz and Quad-band GSM in 850/900/1800/1900 MHz. Note that the Android Dev Phone 1 includes 1GB MicroSC card as an external storage device. It can be replaced with a card of up to 16GB. Concerning the network environment, our tests utilized the University of San Francisco's internet connection, accessed through 802.11g.
 
 \subsection{Results}
-The results of CPU usage is shown in Figure~\ref{fig:cpu}. However it is not as we expected. The monitor mode didn't gain 
-significant advantage over scan mode. However, they synchronization finished faster than scan mode. So the overall cpu 
-usage should be lower than the run-time cpu usage. 
+The results of our CPU usage tests are shown in Figure~\ref{fig:cpu}. However it is not as we expected. The monitor mode didn't gain any significant advantage over scan mode. However, synchronization finished faster than in scan mode, so the overall cpu usage should be lower than our tests indicate.
 
 \begin{figure}%[htp]
 \centering
