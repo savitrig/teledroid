@@ -89,7 +89,7 @@ public class FileMonitorThread implements Runnable {
     	String filename = mFileList.get(Integer.valueOf(wd));
     	if( filename != null ){
     		int res = Notify.unregisterFile(mNFD, wd);
-    		if( res > 0){
+    		if( res >= 0){
     			mFileList.remove(Integer.valueOf(wd));
     			Log.d("teledroid", "Unregistering file " + filename + " with wd:" + wd +".");
     		}else
