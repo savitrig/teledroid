@@ -10,27 +10,34 @@ sync files with remote server. Finally, note that two sorts of threads are invok
 There's the \verb+FileMonitorThread+, and the \verb+ScanFilesThread+. We prefer to implement threads rather than all the
 functions within one process because this enables us to decouple functionality and also make blocking calls.
 
-\onecolumn
 \begin{figure}[htp]
 \centering
-\includegraphics[scale=0.5]{architecture}
+\includegraphics[scale=0.35]{architecture}
 \caption{\teledroid\ Architecture}\label{fig:architecture}
 \end{figure}
-\twocolumn
 
 \section{Implementation}
 \label{sec:Implementation}
+Our \teledroid\ application have an activity of \verb+AndroidFileBrowser+, through which user could browse files stored in 
+Android, and open files of the known type. Also, from this activity user could control synchronization mode, and start/stop 
+synchronization service. 
+
+We implemented our synchronization service in a Local Service component, called \verb+BackgroundService+. The service will 
+control the synchronization processes as well as the SSH connection established between local and remote server. The  
+synchronization actions are implemented in separate Threads. \verb+ScanFileThread+ will keep on looking(scan mode) or 
+waiting(monitor mode) for changes, then generate synchronization actions and proceed with the actions. \verb+FileMonitorThread+ was implemented for monitoring file using inotify.
+
 \subsection{Client Server Communication}
-Our implementation of client-server communication and file transfer are based on JSch. JSch is a pure Java open source SSH library. We establish a connection with the remote server when the \teledroid application starts, and we keep the connection open, as our background service will communicate with remote server from time to time, and transfer files back and forth. 
+Our implementation of client-server communication and file transfer are based on JSch. JSch is a pure Java open source SSH library. We establish a connection with the remote server when the \teledroid\ application starts, and we keep the connection open, as our background service will communicate with remote server from time to time, and transfer files back and forth. 
 
 The JSch library provides the ability to open different channels simultaneously using only a single connection, so that we avoid 
 wasting time and resources establishing new connections. We implement a class \verb+Connection+ and use it as an abstraction over this interface, enabling us to open shell channels and transfer files over SCP. We implemented functions to open 
 a shell for executing commands on the server side.  
 We also implemented two functions: \verb+SCPTo()+ and \verb+SCPFrom()+ which follow the SCP protocol for transferring files, with some modifications to keep the modified times synchronized between client and server. 
 
-We use simple depth-first walk of the given directory either when looking for changes in scan mode or registering files in monitor mode. When scanning we produce a mapping from filenames, relative to the initial directory that we're watching, to ModificationInfo objects, which store the modification time and other information necessary for determining how to synchronize.
+We use simple depth-first walk of the given directory either when looking for changes in scan mode or registering files in monitor mode. When scanning we produce a mapping from filenames, relative to the initial directory that we're watching, to \verb+ModificationInfo+ objects, which store the modification time and other information necessary for determining how to synchronize.
 
-By executing commands on the server, we can get a corresponding map from the server or register a directory to be monitored  and retrieve file change mappings. \teledroid\ will then compare the two mappings. If the difference of the modified time of the same file is bigger than a tolerance value (one second worked for our testing), then the younger copy of the file will be synced and replace the older one on the other side, while changing the modified time to be the same as the younger one. By this method, we are able to avoid the issue of syncing a file back and forth because the modified time of the file after replacement is newer than its source. More details on this can be seen below in the Synchronization section.
+By executing commands on the server, we can get a corresponding map from the server or register a directory to be monitored  and retrieve file change mappings. \teledroid\ will then compare the two mappings. If the difference of the modified time of the same file is bigger than a tolerance value (one second worked for our testing), then the younger copy of the file will be synced and replace the older one on the other side, while changing the modified time to be the same as the younger one. By this method, we are able to avoid the issue of syncing a file back and forth because the modified time of the file after replacement is newer than its source. More details on this can be seen below in the Synchronization part.
 
 \subsection{File Change Notification}
 Our application design requires a file change notification system, which should allow applications to request 
@@ -54,36 +61,38 @@ In our first release, we implement our own notify program, cross-compiled and pu
 program simply implements the functionality of the original google notify program but flushes its output 
 stream every time it finishes writing. The problem with this implementation is obvious. We have to create an extra process 
 and stream with it to communicate. Also, in this system we cannot register and unregister files freely. 
-We could only monitor a directory at a time, or we have to create multiple processes of the notify program, which will surely 
-affect performance. 
+We could only monitor a directory at a time, or we have to create multiple processes of the notify program, which will 
+surely affect performance. 
 
-In our release presented here, we use the Android JNI Library to invoke the inotify system calls. JNI is not officially supported by 
-google, so there's no documentation for it. We implement a static class Notify as the interface to our notify library. 
+In our release presented here, we use the Android JNI Library to invoke the inotify system calls. JNI is not officially 
+supported by google, so there's no documentation for it. We implement a static class Notify as the interface to our 
+notify library. 
+
 In \verb+libnotify+, we use \verb+initNotify()+ to initialize inotify and get the file descriptor. We implement two 
-methods: \verb+registerFile()+ and \verb+unregisterFile()+ for registering and releasing files to be monitored. 
+methods:\\ \verb+registerFile()+ and \verb+unregisterFile()+ for registering and releasing files to be monitored. 
 We also implement \verb+hasNext()+, \verb+nextEvent()+ and \verb+eventMask()+ to get event information. And if the 
 event is with a subfile of directory, we use \verb+newFile()+ to get sub file information. We cross-compiled the 
-library and put the generated \verb+libnotify.so+ file into the lib directory for our application: 
-\verb+data/data/net.solarvistas.android/lib/+, so that in the java static class Notify constructor, we could use 
-\verb+System.loadLibrary(``notify'')+ to load the library. 
+library and put the generated \verb+libnotify.so+ file into the lib directory for our application: \\
+\verb+data/net.solarvistas.android/lib/+, so that in the java static class Notify constructor, we could use 
+\verb+System.loadLibrary("notify")+ to load the library. 
 
-We met with a problem when compile the C library however, the JavaVM passed into \verb+JNI_Onload()+ cannot be correctly recognized 
-as a struct. So we ignore the JNI\_VERSION check and implement a native method \verb+registerNativeMethod()+ to register 
-the JNI native methods. We also include \verb+<utils/Log.h>+ so that we can log using the standard Android tools from within our JNI native code.
+We met with a problem when compile the JNI C library however, the \verb+JavaVM+ passed into \\ \verb+JNI_Onload()+ 
+cannot be correctly recognized as a struct. So we ignore the JNI\_VERSION check and implement a native method \\
+\verb+registerNativeMethod()+ to register 
+the JNI native methods. We also include\\ \verb+<utils/Log.h>+ so that we can log using the standard Android tools 
+from within our JNI native code.
 
 \subsection{Server Side Script}
 The server-side portion of the project was broken into two parts, corresponding to the two phases of interaction with the server. Initially we construct a mapping of filename to modified time for each file in the portion of the filesystem we're synchronizing by doing a simple walk. This is inefficient in both time and space, but unavoidable, as monitoring for changes on both server and client side is only useful if they're initially synchronized.
 
 After the client receives and processes the mapping of the entire directory, it launches a process that watches for changes. Two approaches were implemented here, pull and push. The pull-sync program gathers changes silently, sending them all in a batch on demand, while push-sync sends each change immediately, as it happens.
 
-This work was implemented in the Factor programming language.  Factor is a high level, stack based language with an efficient optimizing compiler.  While a very interesting language in its own right, it is still a young language.  It was chosen for \teledroid purely for pragmatic reasons, however.  Due in part to its excellent foreign function interface, it is the only known environment with a cross-platform API for filesystem monitoring, with bindings for Linux's inotify, Mac OSX's fsevents, and a family of functions in the win32 API.
+This work was implemented in the Factor programming language.  Factor is a high level, stack based language with an efficient optimizing compiler.  While a very interesting language in its own right, it is still a young language.  It was chosen for \teledroid\ purely for pragmatic reasons, however.  Due in part to its excellent foreign function interface, it is the only known environment with a cross-platform API for filesystem monitoring, with bindings for Linux's inotify, Mac OSX's fsevents, and a family of functions in the win32 API.
 
-JSON was used as a serialization format as its impedance mismatch to our data – mostly maps from strings to long integers – was minimal.  JSON also had the advantage of actually being easy for humans to read while debugging.
-
-The source of the server-side software is available separately at http://github.com/rictic/sync-monitor/tree/master
+JSON was used as a serialization format as its impedance mismatch to our data – mostly maps from strings to long integers – was minimal. JSON also had the advantage of actually being easy for humans to read while debugging.
 
 \subsection{Synchronization}
 Synchronization is one of trickier elements in a distributed system. The issue in our \teledroid\ application is that the file after replacement will generate a new modified time, which is the current time and later than the file on the other side. Thus, the file on the other side will be replaced and also generate a newer modified time. Again and again, that file will be transferred back and forth even without any content modification. This is the result of applying the modified time as a key to the file comparison. We could employ checksums in our system, and this might relieve the issue, but with large files the performance impact could be undesirable. Our solution so far is that the new generated file will not be given the current time as its the modified time. Instead, it will be assigned with the modified time of that file on the other side. In this way, \teledroid\ is prevented from transferring files back and forth.
 
-\subsection{Extra Parts}
-(Riku)
+
+

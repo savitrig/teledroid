@@ -1,9 +1,7 @@
 \section{Performance Evaluation}
 \label{sec:Performance}
 
-We conducted our tests in two different mode: scan mode, and monitor mode. In scan mode, the relevant portion of the filesystem is scanned and a tree is built of modification times, both locally and on the server.  The server then sends this information down to the local device, where they are compared to determine what needs to be synchronized. In monitor mode, we use filesystem monitors to watch for changed files on both server and client side, so the only files that are considered for synchronization are those which changed. 
-
-%more info is needed here on how the tests were actually carried out
+We conducted our tests in two different mode: scan mode, and monitor mode. In scan mode, the relevant portion of the filesystem is scanned and a tree is built of modification times, both locally and on the server. The server then sends this information down to the local device, where they are compared to determine what needs to be synchronized. In monitor mode, we use filesystem monitors to watch for changed files on both server and client side, so the only files that are considered for synchronization are those which changed. 
 
 \subsection{Testing Plan}
 In our experiments, we ran the \teledroid application on the background. In turn, we updated multiple files, totaling 1MB in size, on both the local device and the server side three times. In the experiment, we captured CPU and memory usage every 10 seconds. After \teledroid completed one round of file transfers, we recorded the time spent. The experiments were done in both scan mode and monitor mode.
@@ -14,69 +12,15 @@ Our test device is an Android Dev Phone 1. It has a 528MHZ Qualcomm 7210 process
 \subsection{Results}
 The results of our CPU usage tests are shown in Figure~\ref{fig:cpu}. However they were not as we expected. Monitor mode didn't gain any significant advantage over scan mode here. However, synchronization finished faster than in scan mode, so overall cpu usage should be lower than our tests indicate. 
 
-\onecolumn
-\begin{center}
-  \begin{tabular}{ | l || c | c | c | c | c | c | c | c | c | c | }
-    \hline
-CPU Usage& 1  & 2	 & 3 	& 4 	& 5 	& 6 	& 7 	& 8 	& 9 	& 10	 	\\ \hline\hline
-Scan	& 2\% & 64\% & 92\%	& 94\% 	& 78\% 	& 4\%	& 80\%	& 91\%	& 92\%	& 16\% 	  	\\ \hline
-Monitor	& 0\% & 86\% & 55\%	& 85\% 	& 86\% 	& 42\%	& 24\%	& 4\%	& 75\%	& 45\% 		\\ \hline\hline
-
-CPU Usage& 11 & 12	 & 13	& 14	& 15	& 16 	& 17 	& 18 	& 19 	& 20 		\\ \hline\hline
-Scan	& 4\% & 8\%	 & 92\%	& 88\% 	& 0\% 	& \%	& \%	& \%	& \%	& \%  		\\ \hline
-Monitor	&75\% & 91\% & 93\%	& 88\%	& 34\% 	& \%	& \%	& \%	& \%	& \%  		\\ \hline\hline
-
-CPU Usage& 21 & 22	 & 23	& 24	& 25	& 26 	& 27 	& 28 	& 29 	& 30 		\\ \hline\hline
-Scan	& \% & \%	 & \%	& \% 	& \% 	& \%	& \%	& \%	& \%	& \%  		\\ \hline
-Monitor	& \% & \% 	 & \%	& \%	& \% 	& \%	& \%	& \%	& \%	& \%  		\\ \hline\hline
-  \end{tabular}
-\end{center}
-\twocolumn
-%	& \% 	& \%	& \%	& \%	& \% 	& \%
-
-%92\%	88\%
-%62\%	72\%
-%93\%	41\%
-%5\%	92\%
-%4\%	77\%
-%92\%	92\%
-%70\%	7\%
-%84\%	4\%
-%0\%	
-%2\%	
-%93\%	
-%76\%	
-%2\%	
-%1\%
-
-\onecolumn
 \input{graph-cpu}
-\twocolumn
 Similar to our CPU usage results, the memory usage data was also disappointing. As shown in Figure~\ref{fig:memory}, the memory usage in monitor mode is even higher than scan mode initially. We think this is due in part to the fact that in monitor mode we have to perform an initial complete scan before we can switch over to the low overhead scan mode.  This, combined with the fact that monitor mode makes use of several more threads and an external JNI module seems to explain the difference.
 
-\onecolumn
 \input{graph-memory}
-\twocolumn
 In our tests of synchronization speed we finally got data that indicate that monitor version performs better. 
 As we can see in Figure~\ref{fig:speed}, the speed of monitor mode is faster than scan mode on the client side. However,
 the server didn't show significant differences. This may be due to our current server side script using a pull-sync instead of push-sync as client side.
 
-\onecolumn
-\begin{center}
-  \begin{tabular}{ | l || c | c | c | c | }
-    \hline
-Speed	&	Local $\Rightarrow$ Server &	Server $\Rightarrow$ Local &	Local $\Rightarrow$ Server & Server $\Rightarrow$ Local\\
-     	& (Scan Mode) &	(Scan Mode) &	(Monitor Mode)	& (Monitor Mode)\\
-\hline\hline
-Round 1	& 42.7 & 45.2 & 27.2 & 43.3 \\ \hline
-Round 2	& 40.9 & 41.4 & 30.7 & 44.2 \\ \hline
-Round 3	& 42.2 & 41	& 29.1 & 42.3	\\ \hline
-Averge 	& 41.9 & 42.5 &	29 & 43.3 \\ 
-	\hline
-  \end{tabular}
-\end{center}
-\twocolumn
-
-\twocolumn
 \input{graph-speed}
-\onecolumn
+
+
+
