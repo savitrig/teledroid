@@ -1,21 +1,15 @@
 \begin{abstract}
-	In this paper we present \teledroid, a synchronization service for android to aid the need of making use of cloud 
-computing facilities to get more powerful computational ability and faster execution with longer battery life. \\
+	In this paper we present \teledroid, a synchronization service for Android to enable real-time syncing and aid making use of cloud computing facilities to get more powerful computational ability and faster execution with longer battery life. \\
 
-\teledroid\ use a SSH connection between server and mobile device to communicate and determine the files to be transfered. 
-A simple SCP implementation was included in \teledroid\ to conduct the task of transfer files. \teledroid\ employes the 
-operating system feature of monitoring file changes in file systems, which in Linux is inotify, to trace file system 
-changes. The changes from both local and remote will then be analyzed and generate the file changes list and syntonization 
- action list. We use several techniques to prevent ping-pong syntonization, including temporary unregistering file from inotify when transfer file and touching the file modification time after transfer. \\
+\teledroid\ uses an SSH connection between the server and the mobile device to communicate and determine the files to be transfered. A multi-channel, single connection implementation was included in \teledroid\ to communicate with the server and transfer files while minimizing connections and bandwidth used. \teledroid\ employs filesystem monitors as a low-overhead method to keep track of changes that need synchronization. The changes from both local and remote are then analyzed to generate a list of files needing synchronization. We use several techniques to prevent our system from unnecessary transfers, including temporary unregistering files from inotify while transferring and synchronizing the file modification time afterwards. \\
 
-We conduct experiments in the paper to find out whether \verb+inotify+ could provide performance advantages over 
-traditional file scan method.
+We conducted  several experiments to find out whether \verb+inotify+ provides a significant performance advantage over a naive scan of the filesystem.  While our initial results are disappointing, we have a number of ideas for more nuanced tests, and improvements of our system for future work.
 
 \end{abstract}
 
 % do the keywords
-%\begin{keywords}
-%\noindent
-%Keywords: {\bf Parallel I/O, Linux, Multiprocessors, Threads}
+\begin{keywords}
+\noindent
+Keywords: {\bf I/O, Android, filesystem-monitors, inotify}
 
-%\end{keywords}
+\end{keywords}
