@@ -1,0 +1,76 @@
+\appendix
+\onecolumn
+\begin{center}
+{\bf APPENDIX} 
+
+\vspace{0.2in}
+
+
+The source of the \teledroid\ app including JNI C library is available at \\ \textbf{\url{http://teledroid.googlecode.com/svn/}}\\
+\begin{tabular}{ l l }
+/trunk				& the final release of \teledroid\ application	\\
+/trunk/inotify	& the source of inotify JNI C library \\
+/trunk/doc		& the source of this paper	\\
+/tags/r1			& the first release of \teledroid\ application \\
+/tags/r2			& the first release of \teledroid\ application \\
+/tags/rc			& the release candicate of \teledroid\ application \\
+\end{tabular}
+
+\vspace{0.2in}
+
+The source of the server-side software is available separately at \\
+\textbf{\url{http://github.com/rictic/sync-monitor/tree/master}.}
+
+\vspace{0.2in}
+\textbf{Experiments Data }
+
+\vspace{0.05in}
+CPU Usage Data
+
+\begin{tabular}{ | l || c | c | c | c | c | c | c | c | c | c | }
+    \hline
+Time 	& 1  & 2	 & 3 	& 4 	& 5 	& 6 	& 7 	& 8 	& 9 	& 10	 	\\ \hline\hline
+Scan	& 2\% & 64\% & 92\%	& 94\% 	& 78\% 	& 4\%	& 80\%	& 91\%	& 92\%	& 16\% 	  	\\ \hline
+Monitor	& 0\% & 86\% & 55\%	& 85\% 	& 86\% 	& 42\%	& 24\%	& 4\%	& 75\%	& 45\% 		\\ \hline\hline
+
+Time 	& 11 & 12	 & 13	& 14	& 15	& 16 	& 17 	& 18 	& 19 	& 20 		\\ \hline\hline
+Scan	& 4\% & 8\%	 & 92\%	& 88\% 	& 0\% 	& 92\%	& 62\%	& 93\%	& 5\%	& 4\%  		\\ \hline
+Monitor	&75\% & 91\% & 93\%	& 88\%	& 34\% 	& 88\%	& 72\%	& 41\%	& 92\%	& 77\%  		\\ \hline\hline
+
+Time	& 21 & 22	 & 23	& 24	& 25	& 26 	& 27 	& 28 	& 29 	& 30 		\\ \hline\hline
+Scan	& 92\% & 70\%& 84\%	& 0\% 	& 2\% 	& 93\%	& 76\%	& 2\%	& 1\%	&   		\\ \hline
+Monitor	& 92\% & 7\% & 4\%	& 		& 	 	& 		& 		&	  	& 		&   		\\ \hline\hline
+  \end{tabular}
+
+\vspace{0.05in}
+Memory Usage Data
+
+\begin{tabular}{ | l || c | c | c | c | c | c | c | c | c | c | }
+    \hline
+Time	& 1  & 2	 & 3 	& 4 	& 5 	& 6 	& 7 	& 8 	& 9 	& 10	 	\\ \hline\hline
+Scan	& 105364 & 103340 & 103316 & 103316	& 103316 & 107556 & 107556 & 105508 & 105484 & 105484 \\ \hline
+Monitor	& 110784 & 110784 & 110784 & 110784	& 110784 & 110784 & 110784 & 109812 & 107564 & 107564 \\ \hline\hline
+
+Time 	& 11 & 12	 & 13	& 14	& 15	& 16 	& 17 	& 18 	& 19 	& 20 		\\ \hline\hline
+Scan	& 105484 & 105484 & 105484 & 105484	& 105484 & 105484 & 105484 & 105484 & 105484 & 105484 \\ \hline
+Monitor	& 109640 & 107540 & 107536 & 107536	& 107536 & 107540 & 107540 & 107540 & 105492 & 105488 \\ \hline\hline
+
+Time	& 21 & 22	 & 23	& 24	& 25	& 26 	& 27 	& 28 	& 29 	& 30 		\\ \hline\hline
+Scan	& 105484 & 105484 & 105484 & 105484	& 105484 & 105484 & 105484 & 105484 & 105484 & 05484 \\ \hline
+Monitor	& 105488 & 105488 & 105488 & 105488	& 105488 &  &  &  &  & \\ \hline\hline
+  \end{tabular}
+
+\vspace{0.05in}
+Synchronization Speed
+\begin{tabular}{ | l || c | c | c | c | }
+    \hline
+Speed	&	Local $\Rightarrow$ Server &	Server $\Rightarrow$ Local &	Local $\Rightarrow$ Server & Server $\Rightarrow$ Local\\
+     	& (Scan Mode) &	(Scan Mode) &	(Monitor Mode)	& (Monitor Mode)\\
+\hline\hline
+Round 1	& 42.7 & 45.2 & 27.2 & 43.3 \\ \hline
+Round 2	& 40.9 & 41.4 & 30.7 & 44.2 \\ \hline
+Round 3	& 42.2 & 41	& 29.1 & 42.3	\\ \hline
+Averge 	& 41.9 & 42.5 &	29 & 43.3 \\ 
+	\hline
+  \end{tabular}
+\end{center}
