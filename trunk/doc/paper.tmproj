@@ -3,28 +3,28 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>main.tex</string>
+	<string>abstract.tex</string>
 	<key>documents</key>
 	<array>
 		<dict>
 			<key>filename</key>
 			<string>main.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-20T21:32:27Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2009-05-21T02:07:00Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>abstract.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-20T21:23:45Z</date>
+			<date>2009-05-21T02:07:04Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>introduction.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-20T21:32:27Z</date>
+			<date>2009-05-21T02:07:04Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -36,7 +36,7 @@
 			<key>filename</key>
 			<string>implementation.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-20T21:31:57Z</date>
+			<date>2009-05-21T02:07:02Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -54,13 +54,13 @@
 			<key>filename</key>
 			<string>related.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-20T21:32:07Z</date>
+			<date>2009-05-21T02:07:01Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>conclusions.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-20T21:26:41Z</date>
+			<date>2009-05-21T02:07:00Z</date>
 		</dict>
 		<dict>
 			<key>children</key>
@@ -69,7 +69,7 @@
 					<key>filename</key>
 					<string>android.bib</string>
 					<key>lastUsed</key>
-					<date>2009-05-20T21:32:05Z</date>
+					<date>2009-05-21T02:07:01Z</date>
 				</dict>
 				<dict>
 					<key>filename</key>
@@ -211,7 +211,7 @@
 			<key>selectTo</key>
 			<dict>
 				<key>column</key>
-				<integer>25</integer>
+				<integer>24</integer>
 				<key>line</key>
 				<integer>1</integer>
 			</dict>

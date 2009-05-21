@@ -19,12 +19,12 @@ public class FileMonitorThread implements Runnable {
     	stopSignal = false;
     }
     
-    Map<String,ModificationInfo> mFileChanges;
+    Map<String,ModificationInfo> mFileChanges = new LinkedHashMap<String, ModificationInfo>();
     Map<Integer,String>	mFileList = new LinkedHashMap<Integer, String>();
     
     public void run() {
     	//final String remoteDir = "sdcard";
-    	mFileChanges = new LinkedHashMap<String, ModificationInfo>();
+    	//mFileChanges = new LinkedHashMap<String, ModificationInfo>();
     	try{
     		mNFD = Notify.initNotify();
     		Log.i("teledroid", "notify initiated, get nfd " + mNFD + ".");
