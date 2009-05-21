@@ -1,15 +1,14 @@
 \begin{abstract}
-	In this paper we present \teledroid, a synchronization service for Android to enable real-time syncing and aid making use of cloud computing facilities to get more powerful computational ability and faster execution with longer battery life. \\
+	In this paper we present \teledroid, a synchronization service for Android to enable real-time syncing and aid making 
+use of cloud computing facilities to get more powerful computational ability and faster execution with longer battery 
+life.\\ 
 
 \teledroid\ uses an SSH connection between the server and the mobile device to communicate and determine the files to be transfered. A multi-channel, single connection implementation was included in \teledroid\ to communicate with the server and transfer files while minimizing connections and bandwidth used. \teledroid\ employs filesystem monitors as a low-overhead method to keep track of changes that need synchronization. The changes from both local and remote are then analyzed to generate a list of files needing synchronization. We use several techniques to prevent our system from unnecessary transfers, including temporary unregistering files from inotify while transferring and synchronizing the file modification time afterwards. \\
 
-We conducted  several experiments to find out whether \verb+inotify+ provides a significant performance advantage over a naive scan of the filesystem.  While our initial results are disappointing, we have a number of ideas for more nuanced tests, and improvements of our system for future work.
+We conducted  several experiments to find out whether \verb+inotify+ provides a significant performance advantage over a naive scan of the filesystem.  While our initial results are disappointing, we have a number of ideas for more nuanced tests, and improvements of our system for future work.\\
+
+\vspace{0.20in}
+
+\Keywords{I/O, Android, filesystem-monitors, inotify}
 
 \end{abstract}
-
-% do the keywords
-\begin{keywords}
-\noindent
-Keywords: {\bf I/O, Android, filesystem-monitors, inotify}
-
-\end{keywords}

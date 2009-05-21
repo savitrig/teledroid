@@ -14,39 +14,60 @@ Our test device is an Android Dev Phone 1. It has a 528MHZ Qualcomm 7210 process
 \subsection{Results}
 The results of our CPU usage tests are shown in Figure~\ref{fig:cpu}. However they were not as we expected. Monitor mode didn't gain any significant advantage over scan mode here. However, synchronization finished faster than in scan mode, so overall cpu usage should be lower than our tests indicate.
 
-\begin{figure}%[htp]
-\centering
-\subfigure[CPU Usage in Monitor Mode]{\label{fig:cpu-monitor}
-    \includegraphics[scale=0.5]{cpu_monitor}}
-\hspace{0.20in}
-\subfigure[CPU Usage in Scan Mode]{\label{fig:cpu-scan}
-	\includegraphics[scale=0.5]{cpu_scan}}
-\subfigure[Comparison of CPU Usage]{\label{fig:cpu-comp}
-    \includegraphics[scale=0.7]{cpu}}
-\caption{The CPU usage comparison of Monitor and Scan mode}
-\label{fig:cpu}
-\end{figure}
+\begin{center}
+  \begin{tabular}{ | l || c | c | c | c | c | c | c | c | c | c | }
+    \hline
+CPU Usage& 1  & 2	 & 3 	& 4 	& 5 	& 6 	& 7 	& 8 	& 9 	& 10	 	\\ \hline\hline
+Scan	& 2\% & 64\% & 92\%	& 94\% 	& 78\% 	& 4\%	& 80\%	& 91\%	& 92\%	& 16\% 	  	\\ \hline
+Monitor	& 0\% & 86\% & 55\%	& 85\% 	& 86\% 	& 42\%	& 24\%	& 4\%	& 75\%	& 45\% 		\\ \hline\hline
 
+CPU Usage& 11 & 12	 & 13	& 14	& 15	& 16 	& 17 	& 18 	& 19 	& 20 		\\ \hline\hline
+Scan	& 4\% & 8\%	 & 92\%	& 88\% 	& 0\% 	& \%	& \%	& \%	& \%	& \%  		\\ \hline
+Monitor	&75\% & 91\% & 93\%	& 88\%	& 34\% 	& \%	& \%	& \%	& \%	& \%  		\\ \hline\hline
+
+CPU Usage& 21 & 22	 & 23	& 24	& 25	& 26 	& 27 	& 28 	& 29 	& 30 		\\ \hline\hline
+Scan	& \% & \%	 & \%	& \% 	& \% 	& \%	& \%	& \%	& \%	& \%  		\\ \hline
+Monitor	& \% & \% 	 & \%	& \%	& \% 	& \%	& \%	& \%	& \%	& \%  		\\ \hline\hline
+  \end{tabular}
+\end{center}
+
+%	& \% 	& \%	& \%	& \%	& \% 	& \%
+
+%92\%	88\%
+%62\%	72\%
+%93\%	41\%
+%5\%	92\%
+%4\%	77\%
+%92\%	92\%
+%70\%	7\%
+%84\%	4\%
+%0\%	
+%2\%	
+%93\%	
+%76\%	
+%2\%	
+%1\%
+
+\input{graph-cpu}
 Similar to our CPU usage results, the memory usage data was also disappointing. As shown in Figure~\ref{fig:memory}, the memory usage in monitor mode is even higher than scan mode initially. We think this is due in part to the fact that in monitor mode we have to perform an initial complete scan before we can switch over to the low overhead scan mode.  This, combined with the fact that monitor mode makes use of several more threads and an external JNI module seems to explain the difference.
-
-\begin{figure}%[htp]
-\centering
-\subfigure[Memory Usage in Monitor Mode]{\label{fig:memory-monitor}
-    \includegraphics[scale=0.5]{memory_monitor}}
-\hspace{0.20in}
-\subfigure[Memory Usage in Scan Mode]{\label{fig:memory-scan}
-	\includegraphics[scale=0.5]{memory_scan}}
-\subfigure[Comparison of Memory Usage]{\label{fig:memory-comp}
-    \includegraphics[scale=0.7]{memory}}
-\caption{The Memory usage comparison of Monitor and Scan mode}
-\label{fig:memory}
-\end{figure}
+\input{graph-memory}
 
 In our tests of synchronization speed we finally got data that indicate that monitor version performs better. 
 As we can see in Figure~\ref{fig:speed}, the speed of monitor mode is faster than scan mode on the client side. However, the 
-server didn't show significant differences. This may be due to our current server side script using a pull-sync instead of push-sync as client side. 
-\begin{figure}[htp]
-\centering
-\includegraphics[scale=0.7]{speed}
-\caption{Comparison of Synchronization Speed}\label{fig:speed}
-\end{figure}
+server didn't show significant differences. This may be due to our current server side script using a pull-sync instead of push-sync as client side.
+
+\begin{center}
+  \begin{tabular}{ | l || c | c | c | c | }
+    \hline
+Speed	&	Local $\Rightarrow$ Server &	Server $\Rightarrow$ Local &	Local $\Rightarrow$ Server & Server $\Rightarrow$ Local\\
+     	& (Scan Mode) &	(Scan Mode) &	(Monitor Mode)	& (Monitor Mode)\\
+\hline\hline
+Round 1	& 42.7 & 45.2 & 27.2 & 43.3 \\ \hline
+Round 2	& 40.9 & 41.4 & 30.7 & 44.2 \\ \hline
+Round 3	& 42.2 & 41	& 29.1 & 42.3	\\ \hline
+Averge 	& 41.9 & 42.5 &	29 & 43.3 \\ 
+	\hline
+  \end{tabular}
+\end{center}
+ 
+\input{graph-speed}
