@@ -72,6 +72,17 @@ public class FileMonitorThread implements Runnable {
     	}
     }
     
+    public void unregisterFile(int wd){
+    	String file = mFileList.get(Integer.valueOf(wd));
+    	if( file != null ){
+    		int res = Notify.unregisterFile(mNFD, wd);
+    		if( res > 0){
+    			mFileList.remove(Integer.valueOf(wd));
+    			Log.d("teledroid", "Unregistering file " + file + " with wd:" + wd +".");
+    		}else
+    			Log.e("teledroid", "Unable to unregister file " + file + ". Error: " + res);
+    	}
+    }
     private void interpEvent(int event){
     	Integer fileNum = event;
     	Object filename = mFileList.get(fileNum);
@@ -96,6 +107,7 @@ public class FileMonitorThread implements Runnable {
     		case Notify.IN_MOVE_SELF:
     			mFileChanges.put(filename.toString(), new ModificationInfo(
         				(new File(filename.toString())).lastModified(), ModificationInfo.Kind.DELETED));
+    			mFileList.remove(fileNum);
     			Log.v("teledroid", "[" + mFileChanges.size()+ "]\tFile " + filename + " deleted/moved");
     			break;
     		case Notify.IN_CLOSE_WRITE:
