@@ -65,7 +65,7 @@ We could only monitor a directory at a time, or we have to create multiple proce
 surely affect performance. 
 
 In our release presented here, we use the Android JNI Library to invoke the inotify system calls. JNI is not officially 
-supported by google, so there's no documentation for it. We implement a static class Notify as the interface to our 
+supported by google\cite{Google:2008}, so there's no documentation for it. We implement a static class Notify as the interface to our 
 notify library. 
 
 In \verb+libnotify+, we use \verb+initNotify()+ to initialize inotify and get the file descriptor. We implement two 
