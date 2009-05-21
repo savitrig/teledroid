@@ -235,13 +235,14 @@ class Notify {
     	}
     	return event;
     }
+    
     public static native void registerNativeMethod();
     public static native int initNotify();
     public static native int registerFile(int nfd, String file, int mask);
+    public static native int unregisterFile(int nfd, int wd);
     public static native int nextEvent();
     public static native int eventMask();
     public static native String newFile();
     public static native boolean hasNext(int nfd);
-    
 }
 
