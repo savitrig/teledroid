@@ -1,6 +1,15 @@
 \begin{abstract}
+	In this paper we present \teledroid, a synchronization service for android to aid the need of making use of cloud 
+computing facilities to get more powerful computational ability and faster execution with longer battery life. \\
 
-\verb+inotify()+.
+\teledroid\ use a SSH connection between server and mobile device to communicate and determine the files to be transfered. 
+A simple SCP implementation was included in \teledroid\ to conduct the task of transfer files. \teledroid\ employes the 
+operating system feature of monitoring file changes in file systems, which in Linux is inotify, to trace file system 
+changes. The changes from both local and remote will then be analyzed and generate the file changes list and syntonization 
+ action list. We use several techniques to prevent ping-pong syntonization, including temporary unregistering file from inotify when transfer file and touching the file modification time after transfer. \\
+
+We conduct experiments in the paper to find out whether \verb+inotify+ could provide performance advantages over 
+traditional file scan method.
 
 \end{abstract}
 
