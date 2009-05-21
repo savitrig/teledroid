@@ -6,13 +6,13 @@ We conducted our tests in two different mode: scan mode, and monitor mode. In sc
 %more info is needed here on how the tests were actually carried out
 
 \subsection{Testing Plan}
-In our experiments, we ran the Teledroid application on the background. In turn, we updated multiple files, which is a total of 1MB size large, on both local device and server side respectively for three time. In the experiment, we captured the CPU usage and memory usage in every 10 second. After Teledroid completed one round of files transfer, we recorded the time it spent on each round. The experiments were doing in both scan mode and monitor mode.
-				
+In our experiments, we ran the \teledroid application on the background. In turn, we updated multiple files, totaling 1MB in size, on both the local device and the server side three times. In the experiment, we captured CPU and memory usage every 10 seconds. After \teledroid completed one round of file transfers, we recorded the time spent. The experiments were done in both scan mode and monitor mode.
+			
 \subsection{Hardware Configuration}
 Our test device is an Android Dev Phone 1. It has a 528MHZ Qualcomm 7210 processor and 192 MB RAM. It features a touch screen and a trackball for navigation, and provides QWERTY slider keyboard for input. Wi-Fi, GPS, and Bluetooth v2.0 are also present. It also supports 3G WCDMA in 1700/2100 MHz and Quad-band GSM in 850/900/1800/1900 MHz. Note that the Android Dev Phone 1 includes 1GB MicroSC card as an external storage device. It can be replaced with a card of up to 16GB. Concerning the network environment, our tests utilized the University of San Francisco's internet connection, accessed through 802.11g.
 
 \subsection{Results}
-The results of our CPU usage tests are shown in Figure~\ref{fig:cpu}. However it is not as we expected. The monitor mode didn't gain any significant advantage over scan mode. However, synchronization finished faster than in scan mode, so the overall cpu usage should be lower than our tests indicate.
+The results of our CPU usage tests are shown in Figure~\ref{fig:cpu}. However they were not as we expected. Monitor mode didn't gain any significant advantage over scan mode here. However, synchronization finished faster than in scan mode, so overall cpu usage should be lower than our tests indicate.
 
 \begin{figure}%[htp]
 \centering
@@ -27,9 +27,7 @@ The results of our CPU usage tests are shown in Figure~\ref{fig:cpu}. However it
 \label{fig:cpu}
 \end{figure}
 
-The same as CPU usage, the memory usage data is also disappointed. As shown in Figure~\ref{fig:memory}, the memory usage in 
-monitor mode is even higher than scan mode. We think this is due to our implementation use only \verb+ScanFileThread+ in 
-scan mode while using an extra \verb+FileMonitorThread+ in monitor thread. 
+Similar to our CPU usage results, the memory usage data was also disappointing. As shown in Figure~\ref{fig:memory}, the memory usage in monitor mode is even higher than scan mode initially. We think this is due in part to the fact that in monitor mode we have to perform an initial complete scan before we can switch over to the low overhead scan mode.  This, combined with the fact that monitor mode makes use of several more threads and an external JNI module seems to explain the difference.
 
 \begin{figure}%[htp]
 \centering
@@ -44,8 +42,8 @@ scan mode while using an extra \verb+FileMonitorThread+ in monitor thread.
 \label{fig:memory}
 \end{figure}
 
-In the test of synchronization speed, we finally got the data represent the the performance of monitor version is better. 
-As we can see in Figure~\ref{fig:speed}, the speed of monitor mode is faster than scan mode on client side. However, the 
+In our tests of synchronization speed we finally got data that indicate that monitor version performs better. 
+As we can see in Figure~\ref{fig:speed}, the speed of monitor mode is faster than scan mode on the client side. However, the 
 server didn't show significant differences. This may be due to our current server side script using a pull-sync instead of push-sync as client side. 
 \begin{figure}[htp]
 \centering
