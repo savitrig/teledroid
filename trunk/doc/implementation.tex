@@ -18,11 +18,11 @@ functions within one process because this enables us to decouple functionality a
 
 \section{Implementation}
 \label{sec:Implementation}
-Our \teledroid\ application have an activity of \verb+AndroidFileBrowser+, through which user could browse files stored in 
+Our \teledroid\ application have an activity called \\ \verb+AndroidFileBrowser+, through which user could browse files stored in 
 Android, and open files of the known type. Also, from this activity user could control synchronization mode, and start/stop 
 synchronization service. 
 
-We implemented our synchronization service in a Local Service component, called \verb+BackgroundService+. The service will 
+We implemented our synchronization service in a Local Service, \verb+BackgroundService+. The service will 
 control the synchronization processes as well as the SSH connection established between local and remote server. The  
 synchronization actions are implemented in separate Threads. \verb+ScanFileThread+ will keep on looking(scan mode) or 
 waiting(monitor mode) for changes, then generate synchronization actions and proceed with the actions. \verb+FileMonitorThread+ was implemented for monitoring file using inotify.

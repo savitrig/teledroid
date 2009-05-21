@@ -3,64 +3,82 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>conclusions.tex</string>
+	<string>main.tex</string>
 	<key>documents</key>
 	<array>
 		<dict>
 			<key>filename</key>
 			<string>main.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-21T13:04:06Z</date>
+			<date>2009-05-21T23:39:25Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>abstract.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-21T13:04:52Z</date>
+			<date>2009-05-21T22:47:24Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>introduction.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-21T13:04:54Z</date>
+			<date>2009-05-21T22:47:36Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>motivation.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-21T13:05:01Z</date>
+			<date>2009-05-21T22:47:38Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>implementation.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-21T13:05:05Z</date>
+			<date>2009-05-21T23:22:25Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
-			<string>synchronization.tex</string>
+			<string>appendix.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-21T12:05:04Z</date>
+			<date>2009-05-21T22:58:56Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>performance.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-21T13:05:06Z</date>
+			<date>2009-05-21T23:16:08Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>graph-speed.tex</string>
+			<key>lastUsed</key>
+			<date>2009-05-21T22:12:51Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>graph-cpu.tex</string>
+			<key>lastUsed</key>
+			<date>2009-05-21T21:57:52Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>graph-memory.tex</string>
+			<key>lastUsed</key>
+			<date>2009-05-21T21:57:33Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>related.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-21T13:05:07Z</date>
+			<date>2009-05-21T23:39:17Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>conclusions.tex</string>
 			<key>lastUsed</key>
-			<date>2009-05-21T13:05:07Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2009-05-21T23:39:25Z</date>
 		</dict>
 		<dict>
 			<key>children</key>
@@ -69,13 +87,13 @@
 					<key>filename</key>
 					<string>android.bib</string>
 					<key>lastUsed</key>
-					<date>2009-05-21T12:13:10Z</date>
+					<date>2009-05-21T23:34:55Z</date>
 				</dict>
 				<dict>
 					<key>filename</key>
 					<string>frames.tex</string>
 					<key>lastUsed</key>
-					<date>2009-05-20T23:13:51Z</date>
+					<date>2009-05-21T21:49:50Z</date>
 				</dict>
 				<dict>
 					<key>filename</key>
@@ -103,9 +121,9 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>2</integer>
 				<key>line</key>
-				<integer>12</integer>
+				<integer>11</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -117,9 +135,9 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>23</integer>
+				<integer>16</integer>
 				<key>line</key>
-				<integer>3</integer>
+				<integer>4</integer>
 			</dict>
 			<key>columnSelection</key>
 			<false/>
@@ -130,26 +148,40 @@
 			<key>selectFrom</key>
 			<dict>
 				<key>column</key>
-				<integer>9</integer>
+				<integer>12</integer>
 				<key>line</key>
-				<integer>3</integer>
+				<integer>4</integer>
 			</dict>
 			<key>selectTo</key>
 			<dict>
 				<key>column</key>
-				<integer>23</integer>
+				<integer>20</integer>
 				<key>line</key>
-				<integer>3</integer>
+				<integer>4</integer>
 			</dict>
+		</dict>
+		<key>appendix.tex</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>20</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>77</integer>
+			<key>firstVisibleLine</key>
+			<integer>8</integer>
 		</dict>
 		<key>conclusions.tex</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>26</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>5</integer>
+				<integer>10</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -161,39 +193,23 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>22</integer>
+				<integer>61</integer>
 				<key>line</key>
-				<integer>82</integer>
+				<integer>24</integer>
 			</dict>
-			<key>columnSelection</key>
-			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>58</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>12</integer>
-				<key>line</key>
-				<integer>82</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>27</integer>
-				<key>line</key>
-				<integer>82</integer>
-			</dict>
+			<integer>14</integer>
 		</dict>
 		<key>introduction.tex</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>69</integer>
+				<integer>42</integer>
 				<key>line</key>
-				<integer>13</integer>
+				<integer>14</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -205,14 +221,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>20</integer>
+				<integer>10</integer>
 				<key>line</key>
-				<integer>48</integer>
+				<integer>50</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>37</integer>
+			<integer>31</integer>
 		</dict>
 		<key>motivation.tex</key>
 		<dict>
@@ -235,7 +251,7 @@
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>2</integer>
+				<integer>18</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -247,30 +263,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>14</integer>
+				<integer>76</integer>
 				<key>line</key>
-				<integer>1</integer>
+				<integer>14</integer>
 			</dict>
-			<key>columnSelection</key>
-			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>11</integer>
-				<key>line</key>
-				<integer>1</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>18</integer>
-				<key>line</key>
-				<integer>1</integer>
-			</dict>
 		</dict>
 	</dict>
 	<key>openDocuments</key>
@@ -281,6 +281,7 @@
 		<string>motivation.tex</string>
 		<string>implementation.tex</string>
 		<string>performance.tex</string>
+		<string>appendix.tex</string>
 		<string>related.tex</string>
 		<string>conclusions.tex</string>
 		<string>android.bib</string>
