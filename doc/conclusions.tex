@@ -1,11 +1,10 @@
 \section{Conclusions and Future Work}
-\label{sec:Conclusions}
+\label{sec:Conclusions and Future Work}
 
-- deleted files
+While our experimental results weren't what we hoped, we're nevertheless optimistic about our approach.  Due to the complexity of the system and our limited time, we had comparatively few iterations of testing.  With this information in hand and with careful tracing we should expect to significantly reduce memory and cpu usage for the monitoring approach.  Our experiments were also more artificial than we would like.  Ideally we'd like to capture several real world scenarios.  Intuitively we would expect that real-world tests would feature longer times with no changes, and only short bursts where synchronization is needed.  Real world use might also have larger, more complicated directory trees with more files, which we would expect would favor a monitor-based system.
 
-- conflict and merge files
+There are several factors that we didn't have time to implement and experiment with as well.  The period between communicating with the server could lengthen over time as no changes are detected.  As this period gets longer, at some point it may make sense to no longer maintain a constant connection with the server, only reconnecting when the period is up.  
 
-- lazy mode
+On the other hand, if we keep the connection open and use a push based system from the server we wouldn't need to have an explicit waiting period at all.  This would require the Wifi radio to be actively listening however, which might raise the device's idle energy usage too high.
 
-- more??
-
+In short, we still believe that wireless synchronization may be feasible.  There are still a number of parameters that can be varied to get better performance before it's clear whether it is too inefficient.  We also remain convinced that as mobile devices become more capable, this feature will only become more desirable.
