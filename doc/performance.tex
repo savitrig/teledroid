@@ -2,21 +2,11 @@
 \label{sec:Performance}
 
 We conducted our tests in two different mode: scan mode, and monitor mode. In scan mode, the relevant portion of the filesystem is scanned and a tree is built of modification times, both locally and on the server.  The server then sends this information down to the local device, where they are compared to determine what needs to be synchronized. In monitor mode, we use filesystem monitors to watch for changed files on both server and client side, so the only files that are considered for synchronization are those which changed. 
-In our experiments, ......
 
 %more info is needed here on how the tests were actually carried out
 
 \subsection{Testing Plan}
-(Riku)
-Plan:\\
-	- scan mode\\
-	- monitor mode\\
-	- lazy mode (Future work)\\
-	
-	sample:	
-		- one Large-size file\\
-		- multiple small-size files\\
-		(with new or modified files)\\
+In our experiments, we ran the Teledroid application on the background. In turn, we updated multiple files, which is a total of 1MB size large, on both local device and server side respectively for three time. In the experiment, we captured the CPU usage and memory usage in every 10 second. After Teledroid completed one round of files transfer, we recorded the time it spent on each round. The experiments were doing in both scan mode and monitor mode.
 				
 \subsection{Hardware Configuration}
 Our test device is an Android Dev Phone 1. It has a 528MHZ Qualcomm 7210 processor and 192 MB RAM. It features a touch screen and a trackball for navigation, and provides QWERTY slider keyboard for input. Wi-Fi, GPS, and Bluetooth v2.0 are also present. It also supports 3G WCDMA in 1700/2100 MHz and Quad-band GSM in 850/900/1800/1900 MHz. Note that the Android Dev Phone 1 includes 1GB MicroSC card as an external storage device. It can be replaced with a card of up to 16GB. Concerning the network environment, our tests utilized the University of San Francisco's internet connection, accessed through 802.11g.
