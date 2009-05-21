@@ -39,6 +39,12 @@ JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_registerFile
 	return wd;
 }
 
+JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_unregisterFile
+  (JNIEnv *env, jclass clazz, jint nfd, jint wd) {
+	LOGD("native unregistering pos: %d", wd);
+	return inotify_rm_watch(nfd, wd);
+}
+
 JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_nextEvent
   (JNIEnv *env, jclass clazz){
 	if(res < (int)sizeof(*event)){
@@ -88,6 +94,7 @@ static JNINativeMethod sMethods[] = {
      /* name, signature, funcPtr */
 	{"initNotify", "()I", (void*)Java_net_solarvistas_android_Notify_initNotify}, 
 	{"registerFile", "(ILjava/lang/String;I)I", (void*)Java_net_solarvistas_android_Notify_registerFile}, 
+	{"unregisterFile", "(II)I", (void*)Java_net_solarvistas_android_Notify_unregisterFile}, 
 	{"hasNext", "(I)Z", (void*)Java_net_solarvistas_android_Notify_hasNext}, 
 	{"nextEvent","()I", (void*)Java_net_solarvistas_android_Notify_nextEvent}, 
 	{"eventMask","()I", (void*)Java_net_solarvistas_android_Notify_eventMask}, 
