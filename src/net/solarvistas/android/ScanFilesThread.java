@@ -260,9 +260,9 @@ public class ScanFilesThread implements Runnable {
     	switch (action.direction) {
     	case ServerToClient:
     		Log.d("teledroid","transferring " + action.filename + " from server");
-    		BackgroundService.ssh.SCPFrom(action.filename, localFileName);
 	    	if (localMonitor != null)
 	    		localMonitor.unregisterFile(localFileName);
+    		BackgroundService.ssh.SCPFrom(action.filename, localFileName);
 	    	File f = new File(localFileName);
 	    	f.setLastModified(action.modificationInfo.mtime);
 	    	if (localMonitor != null)
