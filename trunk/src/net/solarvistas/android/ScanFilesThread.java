@@ -38,6 +38,7 @@ public class ScanFilesThread implements Runnable {
 	Channel remoteChangeStream = null;
 	OutputStream out;
 	BufferedReader in;
+	int firstTime = BackgroundService.SYNC_MODE_SCAN;
 
 	public void run() {
 		go();
@@ -46,7 +47,6 @@ public class ScanFilesThread implements Runnable {
 	}
 	
 	public void go() {
-
 		
 		//do one initial scan to get synchronized
 		dirScan(localDir, remoteDir);
@@ -58,17 +58,7 @@ public class ScanFilesThread implements Runnable {
 			e1.printStackTrace();
 		}
 		
-		while (!stopSignal) {
-			if(BackgroundService.mSyncMode == BackgroundService.SYNC_MODE_MONITOR)
-				onlyChanges(localDir, remoteDir);
-			else {
-				switchMode();
-				dirScan(localDir, remoteDir);
-			}	
-
-			/*if (remoteChangeStream != null && remoteChangeStream.isConnected())
-				remoteChangeStream.disconnect();*/
-			
+		do {
 			List<SyncAction> syncActions = getSynchronizationActions(serverInfo, localInfo);
 			
 			int successfulCount = 0;
@@ -89,7 +79,15 @@ public class ScanFilesThread implements Runnable {
 			try {
 				Thread.sleep(PERIOD);
 			} catch (InterruptedException e) {}
-		}
+			
+			firstTime = BackgroundService.mSyncMode;
+			if(BackgroundService.mSyncMode == BackgroundService.SYNC_MODE_MONITOR)
+				onlyChanges(localDir, remoteDir);
+			else {
+				switchMode();
+				dirScan(localDir, remoteDir);
+			}	
+		} while (!stopSignal);
 	}
 	
 	private void onFinished() {
@@ -244,7 +242,7 @@ public class ScanFilesThread implements Runnable {
     	final int validPathIndex = 23;
 		String localFileName = null;
 
-    	switch (BackgroundService.mSyncMode) {
+    	switch (firstTime) {
     	case BackgroundService.SYNC_MODE_SCAN:
     		parentPath = "/home/teledroid/";
     		localFileName = action.filename;
