@@ -41,8 +41,9 @@ JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_registerFile
 
 JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_unregisterFile
   (JNIEnv *env, jclass clazz, jint nfd, jint wd) {
-	LOGD("native unregistering pos: %d", wd);
-	return inotify_rm_watch(nfd, wd);
+	int res = inotify_rm_watch(nfd, wd);
+	LOGD("native unregistering pos: %d res=%d", wd, res);
+	return res;
 }
 
 JNIEXPORT jint JNICALL Java_net_solarvistas_android_Notify_nextEvent
