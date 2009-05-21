@@ -1,0 +1,29 @@
+\section{Architecture}
+\label{sec:Architecture}
+Regarding the design of Teledroid Application, there are three main components in the architecture. Initially, we implement a file browser activity as our main activity in Teledroid app. Users is able to view all the files in Android file system. Besides, the file browser can open the files of at lease audio, plain text, and image format. We use this file browser for testing purpose. Next, a long-time running and local service can be started from the menu on the file browser activity. The service will stay connecting with server even when Teledroid is no longer visible. This background service serves with the functionalities of monitoring, scanning, and syncing files with remote server. At last, note that two sorts of threads will be invoked by the background service. There are FileMonitorThread, and ScanFilesThread, We prefer to implement threads rather than all the functions within one process because we could like to decouple each functionality so as to relieve the synchronization issue.
+
+\section{Implementation}
+\label{sec:Implementation}
+\subsection{Client Server Communication}
+We are using a pure java open source SSH libraryfor. jsch library
+		- jsch library; Connection (one session, multiple channels); shell for executing command on server; how to scan files;  comparing two list from local and server with JSON library; scp for transferring files with time difference
+		We applied a reasonable approach to implement the client side of our Teledroid application. Firstly, JSch library, which is a pure Java implementation of SSH2, was imported for establishing internet connection with remote server. In Teledroid application, only one session will be connected. However, multiple channels could be opened with that session so that we can have several concurrent ongoing channels connected with server at the same time. Note that those channels are all in a Shell mode to persistently communicate with remote server. By getting output stream from channel, we could receive output data from the shell of remote server. Similarly, Teledroid could execute command on server by writing a input stream to the Shell channel. Secondly, we use FIFO algorithm to scan files. A root directory is pushed into a stack at the initial time. Then, with popping out the root directory, we scan all the files in the root directory. If the files are also directory, we push them back to stack. If not, the file name with absolute path and the modified time of that file will be stored in a list. Recursively, we will retrieve the modified time of all the files in root directory in a list. By executing command on server, we can get the same kind of list from server. Those two lists will be converted to JSon object, which is a collection of name/value pairs with more powerful supports. Finally, Teledroid compares these two JSon objects. If the difference of the modified time of the same file is bigger than one second, the younger copy of file will be synced and replaced the old one on the other side with changing the modified time as the same as the younger one. By this method, we are able to avoid the synchronization issue that syncing back and forth the file because of the modified time of the new files after replacement. More details are on Synchronization section of this paper.
+
+\subsection(File Change Monitor \(inotify\))
+Linux has built in support for inotify since \cite{Love:2005p1294}. Like other linux-based OS with , 
+
+inotify is a file change notification system, a kernel feature that allows applications to request the monitoring of a set of files against a list of events. 
+
+inotify is an inode-based file notification system that does not require a file ever be opened in order to watch it. inotify is designed with an interface that user-space application developers would want to use, enjoy using and benefit from using. 
+inotify communicates with applications via a single file descriptor instead of signals. This file descriptor is select-, poll-, epoll- and read-able. Simple and fast—the world is happy.
+
+
+Android JNI Library libnotify
+
+
+
+\subsection{Server Side}
+(Peter)
+
+
+\subsection{Extra Parts}
